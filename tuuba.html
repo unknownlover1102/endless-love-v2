@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tuğba Paneli</title>
+  <style>
+    body {
+      background-color: #ffe6f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    button {
+      padding: 12px 24px;
+      margin: 10px;
+      font-size: 1em;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .red { background: #ff4d4d; color: white; }
+    .green { background: #4CAF50; color: white; }
+    #countdown { font-size: 2em; margin-bottom: 20px; }
+    #stats { margin-top: 20px; font-size: 1em; color: #555; }
+  </style>
+</head>
+<body>
+  <h1>Tuğba Paneli 💖</h1>
+  <div id="countdown">Yükleniyor...</div>
+
+  <button type="button" class="red" id="add">+7 Gün</button>
+  <p>N'OLUR BASMA ACI BANA</p>
+
+  <button type="button" class="green" id="sub">-2 Gün</button>
+  <p>BENİ NE KADAR ÇOK SEVDİĞİNİ HATIRLA VE BİR KERE DAHA BAS</p>
+
+  <div id="stats">
+    Toplam +7 gün eklenmiş: <span id="addCount">0</span><br>
+    Toplam -2 gün çıkarılmış: <span id="subCount">0</span>
+  </div>
+
+  <audio id="bgm" autoplay loop playsinline>
+    <source src="ask-sarkisi.mp3" type="audio/mpeg" />
+    Tarayıcınız ses dosyasını desteklemiyor.
+  </audio>
+  <audio id="plusSound" src="plus.mp3"></audio>
+  <audio id="minusSound" src="minus.mp3"></audio>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
+      authDomain: "endless-love-v2.firebaseapp.com",
+      projectId: "endless-love-v2",
+      storageBucket: "endless-love-v2.firebasestorage.app",
+      messagingSenderId: "1098354580",
+      appId: "1:1098354580:web:b214f9c82e6ce423190981"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dateRef = ref(db, "targetDate");
+    const addRef = ref(db, "addCount");
+    const subRef = ref(db, "subCount");
+
+    const countdown = document.getElementById("countdown");
+    const addCountDisplay = document.getElementById("addCount");
+    const subCountDisplay = document.getElementById("subCount");
+    const plusSound = document.getElementById("plusSound");
+    const minusSound = document.getElementById("minusSound");
+
+    function showCountdownOnce(targetDate) {
+      const now = new Date();
+      const diff = new Date(targetDate) - now;
+      if (diff <= 0) {
+        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        countdown.textContent = `${days} gün kaldı...`;
+      }
+    }
+
+    async function refresh() {
+      const [dateSnap, addSnap, subSnap] = await Promise.all([
+        get(dateRef),
+        get(addRef),
+        get(subRef)
+      ]);
+      if (dateSnap.exists()) showCountdownOnce(dateSnap.val());
+      if (addSnap.exists()) addCountDisplay.textContent = addSnap.val();
+      if (subSnap.exists()) subCountDisplay.textContent = subSnap.val();
+    }
+
+    async function updateDays(amount) {
+      const dateSnap = await get(dateRef);
+      if (dateSnap.exists()) {
+        const currentDate = new Date(dateSnap.val());
+        currentDate.setDate(currentDate.getDate() + amount);
+        const newDate = currentDate.toISOString();
+        await set(dateRef, newDate);
+
+        const countRef = amount > 0 ? addRef : subRef;
+        const countSnap = await get(countRef);
+        const currentCount = countSnap.exists() ? countSnap.val() : 0;
+        await set(countRef, currentCount + 1);
+
+        if (amount > 0) plusSound.play();
+        else minusSound.play();
+
+        alert(`${amount > 0 ? "+" + amount : amount} gün ${amount > 0 ? "eklendi" : "çıkarıldı"}`);
+        refresh();
+      }
+    }
+
+    document.getElementById("add").onclick = () => updateDays(7);
+    document.getElementById("sub").onclick = () => updateDays(-2);
+
+    document.body.addEventListener("click", () => {
+      const bgm = document.getElementById("bgm");
+      if (bgm.paused) bgm.play().catch(() => {});
+    }, { once: true });
+
+    refresh();
+  </script>
+</body>
+</html>

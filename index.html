@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Endless Love</title>
+  <style>
+    body {
+      background-color: #ffe6f0;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 50px;
+    }
+    #countdown {
+      font-size: 2em;
+      margin-bottom: 30px;
+    }
+    .stats {
+      font-size: 1.1em;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Birlikte Sonsuzluğa 💞</h1>
+  <div id="countdown">Yükleniyor...</div>
+  <div class="stats">
+    <p>+7 gün eklendi: <span id="addCount">-</span> kez</p>
+    <p>-2 gün çıkarıldı: <span id="subCount">-</span> kez</p>
+  </div>
+
+  <audio autoplay loop playsinline>
+    <source src="ask-sarkisi.mp3" type="audio/mpeg">
+    Tarayıcınız müziği desteklemiyor.
+  </audio>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
+      authDomain: "endless-love-v2.firebaseapp.com",
+      projectId: "endless-love-v2",
+      storageBucket: "endless-love-v2.firebasestorage.app",
+      messagingSenderId: "1098354580",
+      appId: "1:1098354580:web:b214f9c82e6ce423190981"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const countdown = document.getElementById("countdown");
+    const addCountEl = document.getElementById("addCount");
+    const subCountEl = document.getElementById("subCount");
+
+    function showCountdown(targetDate) {
+      const now = new Date();
+      const diff = new Date(targetDate) - now;
+      if (diff <= 0) {
+        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        countdown.textContent = `${days} gün kaldı...`;
+      }
+    }
+
+    async function loadData() {
+      const snap = await get(ref(db, "targetDate"));
+      if (snap.exists()) showCountdown(snap.val());
+      else countdown.textContent = "Tarih ayarlanmadı.";
+
+      const addSnap = await get(ref(db, "addCount"));
+      const subSnap = await get(ref(db, "subCount"));
+
+      if (addSnap.exists()) addCountEl.textContent = addSnap.val();
+      if (subSnap.exists()) subCountEl.textContent = subSnap.val();
+    }
+
+    loadData();
+
+    // iOS için ses tetikleyici
+    document.body.addEventListener('click', () => {
+      const audio = document.querySelector("audio");
+      if (audio.paused) audio.play().catch(() => {});
+    }, { once: true });
+  </script>
+</body>
+</html>
