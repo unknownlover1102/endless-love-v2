@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     body { background:#ffe6f0; font-family:Arial, sans-serif; text-align:center; padding:40px 18px; color:#333; }
-    h1{margin:0 0 10px}
     #countdown { font-size:2rem; margin:16px 0 18px; }
     button { padding:12px 22px; margin:10px; font-size:1rem; border:none; border-radius:10px; cursor:pointer; }
     .red { background:#ff4d4d; color:#fff; }
@@ -53,15 +52,21 @@
     const refSubCount = ref(db, "subcount");
 
     const countdownEl = document.getElementById("countdown");
+    const btnAdd = document.getElementById("add");
+    const btnSub = document.getElementById("sub");
     const bgm = document.getElementById("bgm");
     const effectAdd = document.getElementById("effectAdd");
     const effectSub = document.getElementById("effectSub");
 
     let timerId = null;
+    let lastISO = null; // aynı değer gelirse yeniden başlatma
 
     function startCountdown(targetISO){
-      const target = new Date(targetISO);
+      // aynı ISO geldiyse yeniden kurma
+      if (lastISO === targetISO) return;
+      lastISO = targetISO;
 
+      const target = new Date(targetISO);
       if (timerId) { clearInterval(timerId); timerId = null; }
 
       const render = () => {
@@ -83,39 +88,51 @@
       timerId = setInterval(render, 1000);
     }
 
-    // Hedef tarih değişince tek sayaçla yeniden başlat
+    // Hedef tarih canlı dinleme (tek sayaç)
     onValue(refDate, (snap)=>{
       if (snap.exists()) startCountdown(snap.val());
       else countdownEl.textContent = "Tarih ayarlanmadı.";
     });
 
+    // Çifte tıkla yarışı engellemek için kısa kilit
+    let busy = false;
     async function updateDays(amount){
-      const snap = await get(refDate);
-      if (!snap.exists()) return;
+      if (busy) return;
+      busy = true;
+      btnAdd.disabled = true; btnSub.disabled = true;
 
-      // Tarihi değiştir
-      const current = new Date(snap.val());
-      current.setDate(current.getDate() + amount);
-      const newISO = current.toISOString();
-      await set(refDate, newISO); // onValue tetikler, sayaç resetlenir
+      try {
+        const snap = await get(refDate);
+        if (!snap.exists()) return;
 
-      // İstatistik artır
-      if (amount > 0){
-        const s = await get(refAddCount); await set(refAddCount, (s.val() || 0) + 1);
-      } else {
-        const s = await get(refSubCount); await set(refSubCount, (s.val() || 0) + 1);
+        // Tarihi değiştir
+        const current = new Date(snap.val());
+        current.setDate(current.getDate() + amount);
+        const newISO = current.toISOString();
+        await set(refDate, newISO); // onValue tetiklenir → sayaç resetlenir
+
+        // İstatistik artır
+        if (amount > 0){
+          const s = await get(refAddCount); await set(refAddCount, (s.val() || 0) + 1);
+        } else {
+          const s = await get(refSubCount); await set(refSubCount, (s.val() || 0) + 1);
+        }
+
+        // Efekt ve müzik
+        const effect = amount > 0 ? effectAdd : effectSub;
+        try { bgm.pause(); await effect.play(); } catch {}
+        effect.onended = () => { bgm.play().catch(()=>{}); };
+
+      } finally {
+        // 500ms sonra butonları tekrar aç
+        setTimeout(()=>{ busy = false; btnAdd.disabled = false; btnSub.disabled = false; }, 500);
       }
-
-      // Efekt ve müzik: efekt sırasında müzik dur, bitince devam et
-      const effect = amount > 0 ? effectAdd : effectSub;
-      try { bgm.pause(); await effect.play(); } catch {}
-      effect.onended = () => { bgm.play().catch(()=>{}); };
     }
 
-    document.getElementById("add").addEventListener("click", ()=>updateDays(7));
-    document.getElementById("sub").addEventListener("click", ()=>updateDays(-2));
+    btnAdd.addEventListener("click", ()=>updateDays(7));
+    btnSub.addEventListener("click", ()=>updateDays(-2));
 
-    // iOS / masaüstü: ilk dokunuşta müziği garanti başlat
+    // iOS / masaüstü: ilk dokunuşta müzik
     document.body.addEventListener("click", ()=>{
       if (bgm.paused) bgm.play().catch(()=>{});
     }, { once:true });
