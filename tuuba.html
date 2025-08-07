@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <title>Tuğba Paneli</title>
+  <title>Tuğba Paneli 💖</title>
   <style>
     body {
       background-color: #ffe6f0;
@@ -33,28 +33,24 @@
   <button type="button" class="green" id="sub">-2 Gün</button>
   <p>BENİ NE KADAR ÇOK SEVDİĞİNİ HATIRLA VE BİR KERE DAHA BAS</p>
 
+  <!-- Sesler -->
   <audio id="bgm" autoplay loop playsinline>
     <source src="ask-sarkisi.mp3" type="audio/mpeg" />
     Tarayıcınız ses dosyasını desteklemiyor.
   </audio>
-
-  <audio id="plus-sfx">
-    <source src="plus.mp3" type="audio/mpeg" />
-  </audio>
-  <audio id="minus-sfx">
-    <source src="minus.mp3" type="audio/mpeg" />
-  </audio>
+  <audio id="effectAdd" src="plus.mp3"></audio>
+  <audio id="effectSub" src="minus.mp3"></audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
       authDomain: "endless-love-v2.firebaseapp.com",
       databaseURL: "https://endless-love-v2-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "endless-love-v2",
-      storageBucket: "endless-love-v2.appspot.com",
+      storageBucket: "endless-love-v2.firebasestorage.app",
       messagingSenderId: "1098354580",
       appId: "1:1098354580:web:b214f9c82e6ce423190981"
     };
@@ -62,29 +58,30 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const refDate = ref(db, "targetDate");
-    const refStats = ref(db);
+    const refAddCount = ref(db, "addcount");
+    const refSubCount = ref(db, "subcount");
     const countdown = document.getElementById("countdown");
 
-    function updateCountdown(targetDate) {
-      const interval = setInterval(() => {
+    function showCountdownLive(targetDate) {
+      function update() {
         const now = new Date();
         const diff = new Date(targetDate) - now;
-
         if (diff <= 0) {
           countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-          clearInterval(interval);
         } else {
           const days = Math.floor(diff / (1000 * 60 * 60 * 24));
           const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
           const minutes = Math.floor((diff / (1000 * 60)) % 60);
           const seconds = Math.floor((diff / 1000) % 60);
-          countdown.textContent = `${days} gün ${hours} saat ${minutes} dakika ${seconds} saniye kaldı...`;
+          countdown.textContent = `${days}g ${hours}sa ${minutes}dk ${seconds}sn kaldı...`;
         }
-      }, 1000);
+      }
+      update();
+      setInterval(update, 1000);
     }
 
     get(refDate).then((snapshot) => {
-      if (snapshot.exists()) updateCountdown(snapshot.val());
+      if (snapshot.exists()) showCountdownLive(snapshot.val());
       else countdown.textContent = "Tarih ayarlanmadı.";
     });
 
@@ -95,32 +92,41 @@
         date.setDate(date.getDate() + amount);
         const newDate = date.toISOString();
         await set(refDate, newDate);
-        updateCountdown(newDate);
 
-        const statsSnap = await get(refStats);
-        const current = statsSnap.val() || {};
-        const updated = {
-          addcount: (current.addcount || 0) + (amount > 0 ? 1 : 0),
-          subcount: (current.subcount || 0) + (amount < 0 ? 1 : 0)
-        };
-        await update(refStats, updated);
+        // İstatistik güncelle
+        if (amount > 0) {
+          const addSnap = await get(refAddCount);
+          await set(refAddCount, (addSnap.val() || 0) + 1);
+        } else {
+          const subSnap = await get(refSubCount);
+          await set(refSubCount, (subSnap.val() || 0) + 1);
+        }
 
-        const sfx = document.getElementById(amount > 0 ? "plus-sfx" : "minus-sfx");
-        if (sfx) sfx.play().catch(() => {});
-
+        // Geri sayımı güncelle
+        showCountdownLive(newDate);
         alert(`${amount > 0 ? "+" + amount : amount} gün ${amount > 0 ? "eklendi" : "çıkarıldı"}`);
+
+        // Efekt ve müzik kontrolü
+        const bgm = document.getElementById("bgm");
+        const effect = amount > 0 ? document.getElementById("effectAdd") : document.getElementById("effectSub");
+        bgm.pause();
+        effect.play().then(() => {
+          effect.onended = () => {
+            bgm.play().catch(() => {});
+          };
+        }).catch(() => {
+          bgm.play().catch(() => {});
+        });
       }
     }
 
     document.getElementById("add").onclick = () => updateDays(7);
     document.getElementById("sub").onclick = () => updateDays(-2);
 
-    // iOS için ses oynatma tetikleyici
+    // iOS için müzik tetikleyici
     document.body.addEventListener('click', () => {
       const bgm = document.getElementById("bgm");
-      if (bgm.paused) {
-        bgm.play().catch(() => {});
-      }
+      if (bgm.paused) bgm.play().catch(() => {});
     }, { once: true });
   </script>
 </body>
