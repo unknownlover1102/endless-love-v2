@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Geri Sayım</title>
   <style>
     body {
@@ -16,29 +16,28 @@
     }
     #stats {
       margin-top: 20px;
-      font-size: 1.1em;
-      color: #444;
+      font-size: 1.2em;
+      color: #555;
     }
   </style>
 </head>
 <body>
-  <h1>💖 Sonsuz Aşk Geri Sayımı 💖</h1>
+  <h1>💖 Kalan Süre 💖</h1>
   <div id="countdown">Yükleniyor...</div>
   <div id="stats">
-    <p>+7 Gün Butonuna Basılma: <span id="addCount">0</span> kere</p>
-    <p>-2 Gün Butonuna Basılma: <span id="subCount">0</span> kere</p>
+    Toplam +7 gün ekleme: <span id="addCount">0</span> kez<br>
+    Toplam -2 gün çıkarma: <span id="subCount">0</span> kez
   </div>
 
   <audio id="bgm" autoplay loop playsinline>
     <source src="ask-sarkisi.mp3" type="audio/mpeg" />
-    Tarayıcınız ses dosyasını desteklemiyor.
   </audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // Firebase ayarları (tuuba.html ile aynı olacak!)
+    // 📌 TUUBA.HTML'DEKİ SON ÇALIŞAN CONFIG
     const firebaseConfig = {
       apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
       authDomain: "endless-love-f201c.firebaseapp.com",
@@ -56,26 +55,18 @@
     const addCountEl = document.getElementById("addCount");
     const subCountEl = document.getElementById("subCount");
 
-    // Geri sayımı güncelle
     function updateCountdown(targetDate) {
-      function tick() {
-        const now = new Date();
-        const diff = new Date(targetDate) - now;
-        if (diff <= 0) {
-          countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-          return;
-        }
+      const now = new Date();
+      const diff = new Date(targetDate) - now;
+      if (diff <= 0) {
+        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+      } else {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((diff / (1000 * 60)) % 60);
-        const seconds = Math.floor((diff / 1000) % 60);
-        countdown.textContent = `${days}g ${hours}s ${minutes}d ${seconds}sn kaldı...`;
+        countdown.textContent = `${days} gün kaldı...`;
       }
-      tick();
-      setInterval(tick, 1000);
     }
 
-    // Hedef tarih verisini dinle
+    // 📌 Geri sayımı canlı olarak takip et
     onValue(ref(db, "targetDate"), (snapshot) => {
       if (snapshot.exists()) {
         updateCountdown(snapshot.val());
@@ -84,22 +75,13 @@
       }
     });
 
-    // İstatistik verilerini dinle
+    // 📌 İstatistikleri çek
     onValue(ref(db, "addCount"), (snapshot) => {
-      if (snapshot.exists()) addCountEl.textContent = snapshot.val();
+      addCountEl.textContent = snapshot.exists() ? snapshot.val() : 0;
     });
-
     onValue(ref(db, "subCount"), (snapshot) => {
-      if (snapshot.exists()) subCountEl.textContent = snapshot.val();
+      subCountEl.textContent = snapshot.exists() ? snapshot.val() : 0;
     });
-
-    // iOS müzik başlatma tetikleyici
-    document.body.addEventListener('click', () => {
-      const bgm = document.getElementById("bgm");
-      if (bgm.paused) {
-        bgm.play().catch(() => {});
-      }
-    }, { once: true });
   </script>
 </body>
 </html>
