@@ -1,49 +1,52 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Endless Love</title>
+  <meta charset="UTF-8">
+  <title>Geri Sayım</title>
   <style>
     body {
       background-color: #ffe6f0;
       font-family: Arial, sans-serif;
       text-align: center;
-      padding: 50px;
+      padding: 40px;
     }
     #countdown {
       font-size: 2em;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
-    .stats {
-      font-size: 1.1em;
+    #stats {
       margin-top: 20px;
+      font-size: 1.1em;
+      color: #444;
     }
   </style>
 </head>
 <body>
-  <h1>Birlikte Sonsuzluğa 💞</h1>
+  <h1>💖 Sonsuz Aşk Geri Sayımı 💖</h1>
   <div id="countdown">Yükleniyor...</div>
-  <div class="stats">
-    <p>+7 gün eklendi: <span id="addCount">-</span> kez</p>
-    <p>-2 gün çıkarıldı: <span id="subCount">-</span> kez</p>
+  <div id="stats">
+    <p>+7 Gün Butonuna Basılma: <span id="addCount">0</span> kere</p>
+    <p>-2 Gün Butonuna Basılma: <span id="subCount">0</span> kere</p>
   </div>
 
-  <audio autoplay loop playsinline>
-    <source src="ask-sarkisi.mp3" type="audio/mpeg">
-    Tarayıcınız müziği desteklemiyor.
+  <audio id="bgm" autoplay loop playsinline>
+    <source src="ask-sarkisi.mp3" type="audio/mpeg" />
+    Tarayıcınız ses dosyasını desteklemiyor.
   </audio>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
+    // Firebase ayarları (tuuba.html ile aynı olacak!)
     const firebaseConfig = {
-      apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
-      authDomain: "endless-love-v2.firebaseapp.com",
-      projectId: "endless-love-v2",
-      storageBucket: "endless-love-v2.firebasestorage.app",
-      messagingSenderId: "1098354580",
-      appId: "1:1098354580:web:b214f9c82e6ce423190981"
+      apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
+      authDomain: "endless-love-f201c.firebaseapp.com",
+      databaseURL: "https://endless-love-f201c-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "endless-love-f201c",
+      storageBucket: "endless-love-f201c.firebasestorage.app",
+      messagingSenderId: "144384066384",
+      appId: "1:144384066384:web:b583d194fba60954fee255"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -53,35 +56,49 @@
     const addCountEl = document.getElementById("addCount");
     const subCountEl = document.getElementById("subCount");
 
-    function showCountdown(targetDate) {
-      const now = new Date();
-      const diff = new Date(targetDate) - now;
-      if (diff <= 0) {
-        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-      } else {
+    // Geri sayımı güncelle
+    function updateCountdown(targetDate) {
+      function tick() {
+        const now = new Date();
+        const diff = new Date(targetDate) - now;
+        if (diff <= 0) {
+          countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+          return;
+        }
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        countdown.textContent = `${days} gün kaldı...`;
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+        countdown.textContent = `${days}g ${hours}s ${minutes}d ${seconds}sn kaldı...`;
       }
+      tick();
+      setInterval(tick, 1000);
     }
 
-    async function loadData() {
-      const snap = await get(ref(db, "targetDate"));
-      if (snap.exists()) showCountdown(snap.val());
-      else countdown.textContent = "Tarih ayarlanmadı.";
+    // Hedef tarih verisini dinle
+    onValue(ref(db, "targetDate"), (snapshot) => {
+      if (snapshot.exists()) {
+        updateCountdown(snapshot.val());
+      } else {
+        countdown.textContent = "Tarih ayarlanmadı.";
+      }
+    });
 
-      const addSnap = await get(ref(db, "addCount"));
-      const subSnap = await get(ref(db, "subCount"));
+    // İstatistik verilerini dinle
+    onValue(ref(db, "addCount"), (snapshot) => {
+      if (snapshot.exists()) addCountEl.textContent = snapshot.val();
+    });
 
-      if (addSnap.exists()) addCountEl.textContent = addSnap.val();
-      if (subSnap.exists()) subCountEl.textContent = subSnap.val();
-    }
+    onValue(ref(db, "subCount"), (snapshot) => {
+      if (snapshot.exists()) subCountEl.textContent = snapshot.val();
+    });
 
-    loadData();
-
-    // iOS için ses tetikleyici
+    // iOS müzik başlatma tetikleyici
     document.body.addEventListener('click', () => {
-      const audio = document.querySelector("audio");
-      if (audio.paused) audio.play().catch(() => {});
+      const bgm = document.getElementById("bgm");
+      if (bgm.paused) {
+        bgm.play().catch(() => {});
+      }
     }, { once: true });
   </script>
 </body>
