@@ -38,9 +38,16 @@
     Tarayıcınız ses dosyasını desteklemiyor.
   </audio>
 
+  <audio id="plus-sfx">
+    <source src="plus.mp3" type="audio/mpeg" />
+  </audio>
+  <audio id="minus-sfx">
+    <source src="minus.mp3" type="audio/mpeg" />
+  </audio>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
@@ -55,23 +62,29 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const refDate = ref(db, "targetDate");
-    const refAdd = ref(db, "addcount");
-    const refSub = ref(db, "subcount");
+    const refStats = ref(db);
     const countdown = document.getElementById("countdown");
 
-    function showCountdownOnce(targetDate) {
-      const now = new Date();
-      const diff = new Date(targetDate) - now;
-      if (diff <= 0) {
-        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-      } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        countdown.textContent = `${days} gün kaldı...`;
-      }
+    function updateCountdown(targetDate) {
+      const interval = setInterval(() => {
+        const now = new Date();
+        const diff = new Date(targetDate) - now;
+
+        if (diff <= 0) {
+          countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+          clearInterval(interval);
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((diff / (1000 * 60)) % 60);
+          const seconds = Math.floor((diff / 1000) % 60);
+          countdown.textContent = `${days} gün ${hours} saat ${minutes} dakika ${seconds} saniye kaldı...`;
+        }
+      }, 1000);
     }
 
     get(refDate).then((snapshot) => {
-      if (snapshot.exists()) showCountdownOnce(snapshot.val());
+      if (snapshot.exists()) updateCountdown(snapshot.val());
       else countdown.textContent = "Tarih ayarlanmadı.";
     });
 
@@ -82,22 +95,27 @@
         date.setDate(date.getDate() + amount);
         const newDate = date.toISOString();
         await set(refDate, newDate);
-        await updateCount(amount);
-        showCountdownOnce(newDate);
+        updateCountdown(newDate);
+
+        const statsSnap = await get(refStats);
+        const current = statsSnap.val() || {};
+        const updated = {
+          addcount: (current.addcount || 0) + (amount > 0 ? 1 : 0),
+          subcount: (current.subcount || 0) + (amount < 0 ? 1 : 0)
+        };
+        await update(refStats, updated);
+
+        const sfx = document.getElementById(amount > 0 ? "plus-sfx" : "minus-sfx");
+        if (sfx) sfx.play().catch(() => {});
+
         alert(`${amount > 0 ? "+" + amount : amount} gün ${amount > 0 ? "eklendi" : "çıkarıldı"}`);
       }
-    }
-
-    async function updateCount(amount) {
-      const refToUpdate = amount > 0 ? refAdd : refSub;
-      const snap = await get(refToUpdate);
-      const current = snap.exists() ? snap.val() : 0;
-      await set(refToUpdate, current + 1);
     }
 
     document.getElementById("add").onclick = () => updateDays(7);
     document.getElementById("sub").onclick = () => updateDays(-2);
 
+    // iOS için ses oynatma tetikleyici
     document.body.addEventListener('click', () => {
       const bgm = document.getElementById("bgm");
       if (bgm.paused) {
