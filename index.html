@@ -9,6 +9,7 @@
       font-family: Arial, sans-serif;
       text-align: center;
       padding: 40px;
+      color: #333;
     }
     #countdown {
       font-size: 2em;
@@ -25,8 +26,8 @@
   <h1>💖 KARIM OLACAĞIN GÜNE KALAN SÜRE 💖</h1>
   <div id="countdown">Yükleniyor...</div>
   <div id="stats">
-    Toplam +7 gün ekleme: <span id="addCount">0</span> kez<br>
-    Toplam -2 gün çıkarma: <span id="subCount">0</span> kez
+    Toplam +7 gün ekleme: <span id="addcount">0</span> kez<br>
+    Toplam -2 gün çıkarma: <span id="subcount">0</span> kez
   </div>
 
   <audio id="bgm" autoplay loop playsinline>
@@ -37,7 +38,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // 📌 SON GÖNDERDİĞİN YENİ FIREBASE CONFIG
+    // Tuuba.html ile aynı config
     const firebaseConfig = {
       apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
       authDomain: "endless-love-v2.firebaseapp.com",
@@ -50,39 +51,51 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const countdown = document.getElementById("countdown");
-    const addCountEl = document.getElementById("addCount");
-    const subCountEl = document.getElementById("subCount");
+    const countdownEl = document.getElementById("countdown");
+    const addCountEl = document.getElementById("addcount");
+    const subCountEl = document.getElementById("subcount");
 
-    function updateCountdown(targetDate) {
-      const now = new Date();
-      const diff = new Date(targetDate) - now;
-      if (diff <= 0) {
-        countdown.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-      } else {
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        countdown.textContent = `${days} gün kaldı...`;
-      }
+    let timerId = null;
+
+    function startCountdown(targetISO) {
+      if (timerId) clearInterval(timerId);
+      const target = new Date(targetISO);
+
+      const render = () => {
+        const diffMs = target.getTime() - Date.now();
+        if (diffMs <= 0) {
+          countdownEl.textContent = "Bugün sevgili oluyorsunuz! 🎉";
+          clearInterval(timerId);
+          return;
+        }
+        const totalSec = Math.floor(diffMs / 1000);
+        const days = Math.floor(totalSec / 86400);
+        const hours = Math.floor((totalSec % 86400) / 3600);
+        const minutes = Math.floor((totalSec % 3600) / 60);
+        const seconds = totalSec % 60;
+        countdownEl.textContent = `${days}g ${hours}sa ${minutes}dk ${seconds}sn kaldı…`;
+      };
+
+      render();
+      timerId = setInterval(render, 1000);
     }
 
-    // 📌 Geri sayımı canlı takip et
+    // Geri sayımı canlı takip et
     onValue(ref(db, "targetDate"), (snapshot) => {
       if (snapshot.exists()) {
-        updateCountdown(snapshot.val());
+        startCountdown(snapshot.val());
       } else {
-        countdown.textContent = "Tarih ayarlanmadı.";
+        countdownEl.textContent = "Tarih ayarlanmadı.";
       }
     });
 
-    // 📌 İstatistikleri çek
-    onValue(ref(db, "addCount"), (snapshot) => {
+    // İstatistikleri canlı takip et (tuuba.html ile aynı isimler)
+    onValue(ref(db, "addcount"), (snapshot) => {
       addCountEl.textContent = snapshot.exists() ? snapshot.val() : 0;
     });
-    onValue(ref(db, "subCount"), (snapshot) => {
+    onValue(ref(db, "subcount"), (snapshot) => {
       subCountEl.textContent = snapshot.exists() ? snapshot.val() : 0;
     });
   </script>
 </body>
 </html>
-
-
