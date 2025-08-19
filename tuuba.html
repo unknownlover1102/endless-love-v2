@@ -2,169 +2,158 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Tuuba Paneli</title>
+  <title>Tuuba ❤️</title>
   <style>
     body {
-      background-color: #ffe6f0;
-      font-family: Arial, sans-serif;
-      text-align: center;
       margin: 0;
       padding: 0;
+      font-family: Arial, sans-serif;
+      background-color: #ffe6f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
     }
-
-    header {
-      background: #ff80aa;
-      color: white;
-      padding: 15px;
-      font-size: 1.5em;
+    .container {
+      width: 90%;
+      max-width: 800px;
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      text-align: center;
       position: relative;
     }
-
+    h1 {
+      color: #d63384;
+    }
     /* Menü butonu */
     .menu-btn {
       position: absolute;
-      left: 15px;
       top: 15px;
+      left: 15px;
       font-size: 24px;
       cursor: pointer;
-      user-select: none;
+      z-index: 1000;
     }
-
     /* Yan menü */
     .side-menu {
-      height: 100%;
-      width: 0;
       position: fixed;
+      left: -220px;
       top: 0;
-      left: 0;
-      background-color: #333;
-      overflow-x: hidden;
-      transition: 0.4s;
+      width: 200px;
+      height: 100%;
+      background: #d63384;
+      color: white;
       padding-top: 60px;
+      transition: 0.4s;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    }
+    .side-menu.open {
+      left: 0;
     }
     .side-menu a {
-      padding: 10px 20px;
-      text-decoration: none;
-      font-size: 20px;
-      color: white;
       display: block;
-      transition: 0.2s;
+      padding: 15px;
+      text-decoration: none;
+      color: white;
+      transition: background 0.3s;
     }
     .side-menu a:hover {
-      background-color: #575757;
+      background: #a02362;
     }
-
-    .content {
-      margin: 40px auto;
-      width: 90%;
-      max-width: 600px;
+    /* İçerikler */
+    .section {
+      display: none;
     }
-
-    #countdown {
-      font-size: 2em;
-      margin-bottom: 20px;
+    .section.active {
+      display: block;
     }
-
-    .btn {
-      padding: 10px 20px;
-      margin: 10px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1em;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn:hover {
-      transform: scale(1.1);
-    }
-    .btn-red {
-      background-color: #ff4d4d;
-      color: white;
-    }
-    .btn-green {
-      background-color: #4CAF50;
-      color: white;
-    }
-
     textarea {
       width: 100%;
-      height: 120px;
+      min-height: 120px;
+      margin-top: 10px;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #ccc;
-      font-size: 1em;
+      font-size: 14px;
+      resize: vertical;
     }
-
+    button {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #d63384;
+      color: white;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #a02362;
+    }
     img {
       max-width: 100%;
-      border-radius: 12px;
-      margin: 10px 0;
+      border-radius: 15px;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <span class="menu-btn" onclick="toggleMenu()">☰</span>
-    💖 Tuuba Paneli 💖
-  </header>
-
-  <!-- Yan Menü -->
-  <div id="sideMenu" class="side-menu">
-    <a href="#" onclick="showSection('sayac')">Sayaç</a>
-    <a href="#" onclick="showSection('gunluk')">Günlük</a>
-    <a href="#" onclick="showSection('tahmin')">Fotoğraf Tahmin</a>
+  <div class="menu-btn" onclick="toggleMenu()">☰</div>
+  <div class="side-menu" id="sideMenu">
+    <a href="#" onclick="showSection('counter')">Sayaç</a>
+    <a href="#" onclick="showSection('diary')">Günlük</a>
+    <a href="#" onclick="showSection('game')">Görsel Tahmin</a>
   </div>
 
-  <!-- İçerik -->
-  <div id="sayac" class="content">
-    <h2>Karım Olacağın Güne Kalan Süre</h2>
-    <div id="countdown">Yükleniyor...</div>
-    <button class="btn btn-red" onclick="changeDays(7, 'minus')">N'OLUR BASMA ACI BANA (+7 Gün)</button>
-    <button class="btn btn-green" onclick="changeDays(-2, 'plus')">BENİ NE KADAR ÇOK SEVDİĞİNİ HATIRLA (-2 Gün)</button>
+  <div class="container">
+    <h1>❤️ Tuuba & Ben ❤️</h1>
+
+    <!-- Sayaç -->
+    <div id="counter" class="section active">
+      <h2>Kalan Gün</h2>
+      <div id="countdown">Yükleniyor...</div>
+      <button id="minusBtn">-2 Gün</button>
+      <button id="plusBtn">+7 Gün</button>
+    </div>
+
+    <!-- Günlük -->
+    <div id="diary" class="section">
+      <h2>Günlük</h2>
+      <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
+      <textarea placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
+    </div>
+
+    <!-- Görsel Tahmin -->
+    <div id="game" class="section">
+      <h2>Fotoğraf Tahmini</h2>
+      <img src="foto1.jpg" alt="Fotoğraf 1">
+      <p>Bu fotoğraf sana ne hissettiriyor? Tahmin et!</p>
+      <textarea placeholder="Tahminini yaz..."></textarea>
+    </div>
+
+    <!-- Müzik -->
+    <div style="margin-top:20px;">
+      <audio id="bgMusic" loop>
+        <source src="ask-sarkisi.mp3" type="audio/mpeg">
+      </audio>
+      <button onclick="document.getElementById('bgMusic').play()">🎵 Müziği Başlat</button>
+    </div>
   </div>
 
-  <div id="gunluk" class="content" style="display:none;">
-    <h2>Günlük</h2>
-    <textarea id="gunlukInput" placeholder="Günümüzü birbirimize anlatalım..."></textarea>
-    <button class="btn btn-green" onclick="kaydetGunluk()">Kaydet</button>
-    <div id="gunlukList"></div>
-  </div>
-
-  <div id="tahmin" class="content" style="display:none;">
-    <h2>Fotoğraf Tahmin Oyunu</h2>
-    <img id="tahminImage" src="resim1.jpg" alt="Tahmin Resmi">
-    <textarea id="tahminInput" placeholder="Bu fotoğraf hakkında ne düşünüyorsun?"></textarea>
-    <button class="btn btn-green" onclick="kaydetTahmin()">Kaydet</button>
-    <div id="tahminList"></div>
-  </div>
-
-  <!-- Ses Efektleri -->
+  <!-- Ses efektleri -->
   <audio id="plusSound" src="plus.mp3"></audio>
   <audio id="minusSound" src="minus.mp3"></audio>
 
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-  <script>
-    // Menü aç/kapa
-    function toggleMenu() {
-      const menu = document.getElementById("sideMenu");
-      if (menu.style.width === "250px") {
-        menu.style.width = "0";
-      } else {
-        menu.style.width = "250px";
-      }
-    }
-
-    function showSection(id) {
-      document.querySelectorAll('.content').forEach(c => c.style.display = "none");
-      document.getElementById(id).style.display = "block";
-      toggleMenu();
-    }
-
-    // Firebase config
+    // 🔥 Senin config'in
     const firebaseConfig = {
       apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
       authDomain: "endless-love-f201c.firebaseapp.com",
@@ -174,75 +163,71 @@
       appId: "1:144384066384:web:b583d194fba60954fee255"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-    // Sayaç Firestore
     const countdownEl = document.getElementById("countdown");
-    let targetDate = new Date("2025-08-06T00:00:00"); // Başlangıç tarihi
-    let totalDays = 40;
+    const plusBtn = document.getElementById("plusBtn");
+    const minusBtn = document.getElementById("minusBtn");
+    const plusSound = document.getElementById("plusSound");
+    const minusSound = document.getElementById("minusSound");
+
+    let endDate;
+
+    async function loadCounter() {
+      const ref = doc(db, "counter", "main");
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        endDate = snap.data().endDate.toDate();
+      } else {
+        // default: 40 gün sonrası
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() + 40);
+        await setDoc(ref, { endDate });
+      }
+      updateCountdown();
+    }
+
+    async function saveCounter() {
+      const ref = doc(db, "counter", "main");
+      await setDoc(ref, { endDate });
+    }
 
     function updateCountdown() {
       const now = new Date();
-      const diff = targetDate - now;
-      const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      countdownEl.innerText = `${days} gün kaldı`;
+      const diff = endDate - now;
+      const days = Math.ceil(diff / (1000*60*60*24));
+      countdownEl.innerText = `${days} Gün kaldı`;
     }
 
-    setInterval(updateCountdown, 1000);
-
-    function changeDays(num, sound) {
-      if (sound === "plus") document.getElementById("plusSound").play();
-      else document.getElementById("minusSound").play();
-      totalDays += num;
-      targetDate.setDate(targetDate.getDate() + num);
-      db.collection("sayac").doc("durum").set({ targetDate: targetDate.toISOString() });
-    }
-
-    db.collection("sayac").doc("durum").get().then(doc => {
-      if (doc.exists) {
-        targetDate = new Date(doc.data().targetDate);
-      }
+    plusBtn.addEventListener("click", async () => {
+      plusSound.play();
+      endDate.setDate(endDate.getDate() + 7);
+      await saveCounter();
       updateCountdown();
     });
 
-    // Günlük
-    function kaydetGunluk() {
-      const text = document.getElementById("gunlukInput").value;
-      if (!text) return;
-      db.collection("gunluk").add({
-        metin: text,
-        tarih: new Date().toISOString()
-      });
-      document.getElementById("gunlukInput").value = "";
-    }
-
-    db.collection("gunluk").orderBy("tarih", "desc").onSnapshot(snap => {
-      const list = document.getElementById("gunlukList");
-      list.innerHTML = "";
-      snap.forEach(doc => {
-        list.innerHTML += `<p>📝 ${doc.data().metin}</p>`;
-      });
+    minusBtn.addEventListener("click", async () => {
+      minusSound.play();
+      endDate.setDate(endDate.getDate() - 2);
+      await saveCounter();
+      updateCountdown();
     });
 
-    // Tahmin
-    function kaydetTahmin() {
-      const text = document.getElementById("tahminInput").value;
-      if (!text) return;
-      db.collection("tahmin").add({
-        metin: text,
-        tarih: new Date().toISOString()
-      });
-      document.getElementById("tahminInput").value = "";
-    }
+    loadCounter();
+    setInterval(updateCountdown, 60000);
+  </script>
 
-    db.collection("tahmin").orderBy("tarih", "desc").onSnapshot(snap => {
-      const list = document.getElementById("tahminList");
-      list.innerHTML = "";
-      snap.forEach(doc => {
-        list.innerHTML += `<p>💭 ${doc.data().metin}</p>`;
-      });
-    });
+  <!-- Menü script -->
+  <script>
+    function toggleMenu() {
+      document.getElementById("sideMenu").classList.toggle("open");
+    }
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      toggleMenu();
+    }
   </script>
 </body>
 </html>
