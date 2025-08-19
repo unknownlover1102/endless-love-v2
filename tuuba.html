@@ -1,16 +1,160 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <title>Tuuba Paneli</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Tuuba ❤️</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #ffe6f0;
+      overflow-x: hidden;
+    }
+
+    .container {
+      text-align: center;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    h1 {
+      color: #d6336c;
+    }
+
+    #countdown {
+      font-size: 2em;
+      margin: 20px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.1);
+    }
+
+    .plus-btn {
+      background: #dc3545;
+      color: #fff;
+    }
+    .minus-btn {
+      background: #28a745;
+      color: #fff;
+    }
+
+    /* Menü */
+    .menu-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 28px;
+      cursor: pointer;
+    }
+
+    .side-menu {
+      height: 100%;
+      width: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+      background: #333;
+      overflow-x: hidden;
+      transition: 0.4s;
+      padding-top: 60px;
+    }
+
+    .side-menu a {
+      padding: 10px 20px;
+      text-decoration: none;
+      font-size: 22px;
+      color: #fff;
+      display: block;
+      transition: 0.3s;
+    }
+
+    .side-menu a:hover {
+      background: #575757;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      font-size: 36px;
+      margin-left: 50px;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 1em;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Menü -->
+  <div class="menu-btn" onclick="openMenu()">☰</div>
+  <div id="sideMenu" class="side-menu">
+    <a href="javascript:void(0)" class="close-btn" onclick="closeMenu()">&times;</a>
+    <a href="#" onclick="showPage('sayac')">Sayaç</a>
+    <a href="#" onclick="showPage('gunluk')">Günlük</a>
+    <a href="#" onclick="showPage('oyun')">Görsel Tahmin</a>
+  </div>
+
+  <!-- İçerik -->
+  <div class="container">
+    <!-- Sayaç -->
+    <div id="sayac" class="page">
+      <h1>💖 Karım olacağın güne kalan süre</h1>
+      <div id="countdown">Yükleniyor...</div>
+      <button class="plus-btn" onclick="updateDate(7)">+7 Gün<br><small>N'OLUR BASMA ACI BANA</small></button>
+      <button class="minus-btn" onclick="updateDate(-2)">-2 Gün<br><small>BENİ NE KADAR ÇOK SEVDİĞİNİ HATIRLA</small></button>
+    </div>
+
+    <!-- Günlük -->
+    <div id="gunluk" class="page hidden">
+      <h1>📖 Günlük</h1>
+      <p>Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.</p>
+      <textarea placeholder="Bugün olanları yaz..."></textarea>
+    </div>
+
+    <!-- Görsel Tahmin -->
+    <div id="oyun" class="page hidden">
+      <h1>🎨 Fotoğraf Tahmin Oyunu</h1>
+      <img src="foto1.jpg" alt="Tahmin Et" style="width:100%;max-width:400px;border-radius:10px;">
+      <p>Bu fotoğrafta neler hissediyorsun?</p>
+      <textarea placeholder="Tahminini yaz..."></textarea>
+    </div>
+  </div>
+
+  <!-- Sesler -->
+  <audio id="plusSound" src="plus.mp3"></audio>
+  <audio id="minusSound" src="minus.mp3"></audio>
 
   <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-    // Senin Firebase yapılandırman
     const firebaseConfig = {
       apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
       authDomain: "endless-love-f201c.firebaseapp.com",
@@ -23,198 +167,64 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Firestore kayıt fonksiyonları
-    async function saveEntry(type, text) {
-      try {
-        await addDoc(collection(db, type), {
-          text,
-          createdAt: serverTimestamp()
-        });
-      } catch (e) {
-        console.error("Firestore hatası:", e);
+    const countdownRef = doc(db, "countdown", "mainTimer");
+    let targetDate = null;
+
+    async function loadDate() {
+      const snap = await getDoc(countdownRef);
+      if (snap.exists()) {
+        targetDate = new Date(snap.data().targetDate);
+      } else {
+        targetDate = new Date("2025-09-15T00:00:00");
+        await setDoc(countdownRef, { targetDate: targetDate.toISOString() });
       }
+      updateCountdown();
     }
 
-    // Günlük kaydetme
-    window.saveJournal = async function () {
-      const input = document.getElementById("journalInput");
-      if (input.value.trim() !== "") {
-        await saveEntry("journal", input.value.trim());
-        input.value = "";
-      }
-    };
+    async function updateDate(days) {
+      if (!targetDate) return;
+      targetDate.setDate(targetDate.getDate() + days);
+      await setDoc(countdownRef, { targetDate: targetDate.toISOString() });
 
-    // Tahmin kaydetme
-    window.saveGuess = async function () {
-      const input = document.getElementById("guessInput");
-      if (input.value.trim() !== "") {
-        await saveEntry("guesses", input.value.trim());
-        input.value = "";
-      }
-    };
+      if (days > 0) document.getElementById("plusSound").play();
+      else document.getElementById("minusSound").play();
 
-    // Günlükleri canlı göster
-    const journalBox = document.getElementById("journalBox");
-    const q = query(collection(db, "journal"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-      journalBox.innerHTML = "";
-      snapshot.forEach((doc) => {
-        const p = document.createElement("p");
-        p.textContent = "📓 " + doc.data().text;
-        journalBox.appendChild(p);
-      });
-    });
-
-    // Tahminleri canlı göster
-    const guessBox = document.getElementById("guessBox");
-    const q2 = query(collection(db, "guesses"), orderBy("createdAt", "desc"));
-    onSnapshot(q2, (snapshot) => {
-      guessBox.innerHTML = "";
-      snapshot.forEach((doc) => {
-        const p = document.createElement("p");
-        p.textContent = "💡 " + doc.data().text;
-        guessBox.appendChild(p);
-      });
-    });
-  </script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #ffe6f0;
+      updateCountdown();
     }
-    header {
-      background: #ff4d6d;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      position: relative;
-    }
-    .menu-btn {
-      position: absolute;
-      left: 10px;
-      top: 15px;
-      font-size: 22px;
-      cursor: pointer;
-    }
-    nav {
-      width: 200px;
-      background: #333;
-      color: white;
-      height: 100%;
-      position: fixed;
-      left: -200px;
-      top: 0;
-      transition: 0.3s;
-      padding-top: 60px;
-    }
-    nav a {
-      display: block;
-      padding: 12px;
-      color: white;
-      text-decoration: none;
-    }
-    nav a:hover {
-      background: #444;
-    }
-    .show {
-      left: 0;
-    }
-    section {
-      padding: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
-      font-size: 1em;
-      padding: 10px;
-    }
-    button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      background: #ff4d6d;
-      border: none;
-      color: white;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background: #e63950;
-    }
-    #countdown {
-      font-size: 2em;
-      margin-top: 20px;
-      color: #333;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <span class="menu-btn" onclick="toggleMenu()">☰</span>
-    Tuuba Paneli
-  </header>
-
-  <nav id="sideMenu">
-    <a href="#sayac">Sayaç</a>
-    <a href="#gunluk">Günlük</a>
-    <a href="#tahmin">Görsel Tahmin</a>
-  </nav>
-
-  <!-- Sayaç -->
-  <section id="sayac">
-    <h2>⏳ Geri Sayım</h2>
-    <div id="countdown"></div>
-  </section>
-
-  <!-- Günlük -->
-  <section id="gunluk">
-    <h2>📖 Günlük</h2>
-    <p>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</p>
-    <textarea id="journalInput" placeholder="Günlüğünü buraya yaz..."></textarea>
-    <button onclick="saveJournal()">Kaydet</button>
-    <div id="journalBox"></div>
-  </section>
-
-  <!-- Görsel Tahmin -->
-  <section id="tahmin">
-    <h2>🖼️ Görsel Tahmin</h2>
-    <img src="resim1.jpg" alt="Tahmin" width="200">
-    <p>Bu fotoğraf sana ne hissettiriyor?</p>
-    <textarea id="guessInput" placeholder="Tahminini buraya yaz..."></textarea>
-    <button onclick="saveGuess()">Kaydet</button>
-    <div id="guessBox"></div>
-  </section>
-
-  <script>
-    function toggleMenu() {
-      document.getElementById("sideMenu").classList.toggle("show");
-    }
-
-    // Sayaç (başlangıç: 6 Ağustos 2025, süre: 40 gün)
-    const startDate = new Date("2025-08-06T00:00:00").getTime();
-    const duration = 40 * 24 * 60 * 60 * 1000;
-    const endDate = startDate + duration;
 
     function updateCountdown() {
-      const now = new Date().getTime();
-      const remaining = endDate - now;
+      const now = new Date();
+      const diff = targetDate - now;
 
-      if (remaining < 0) {
-        document.getElementById("countdown").innerText = "Bitti!";
+      if (diff <= 0) {
+        document.getElementById("countdown").innerText = "Bugün o gün 💍";
         return;
       }
 
-      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
 
       document.getElementById("countdown").innerText =
-        `${days}g ${hours}s ${minutes}d ${seconds}sn`;
+        `${days} Gün ${hours} Saat ${mins} Dakika ${secs} Saniye`;
     }
 
     setInterval(updateCountdown, 1000);
+    loadDate();
+
+    // Menü fonksiyonları
+    window.openMenu = function() {
+      document.getElementById("sideMenu").style.width = "250px";
+    }
+    window.closeMenu = function() {
+      document.getElementById("sideMenu").style.width = "0";
+    }
+    window.showPage = function(id) {
+      document.querySelectorAll(".page").forEach(p => p.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+      closeMenu();
+    }
   </script>
 </body>
 </html>
