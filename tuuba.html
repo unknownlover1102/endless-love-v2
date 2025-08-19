@@ -1,449 +1,220 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Karımın Paneli 💖</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <style>
-    body { background:#ffe6f0; font-family:Arial, sans-serif; text-align:center; padding:40px 18px; color:#333; }
-    #countdown { font-size:2rem; margin:16px 0 18px; }
-    button { padding:12px 22px; margin:10px; font-size:1rem; border:none; border-radius:10px; cursor:pointer; }
-    .red { background:#ff4d4d; color:#fff; }
-    .green { background:#4CAF50; color:#fff; }
-    p.note{margin-top:-6px; color:#555}
-    <style>
-  /* ===== TK Drawer UI (prefix: tk-) ===== */
-  :root { --tk-bg:#fff; --tk-text:#111827; --tk-muted:#6b7280; --tk-shadow:0 10px 25px rgba(0,0,0,.12); }
+  <meta charset="UTF-8">
+  <title>Tuuba Paneli</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  /* Sol üst 3 çizgi */
-  .tk-fab {
-    position: fixed; top: 16px; left: 16px; z-index: 10000;
-    width: 44px; height: 44px; border-radius: 10px;
-    background: var(--tk-bg); color: var(--tk-text);
-    display:flex; align-items:center; justify-content:center;
-    box-shadow: var(--tk-shadow); cursor:pointer; user-select:none;
-    transition: transform .15s ease;
-  }
-  .tk-fab:hover { transform: translateY(-1px); }
-  .tk-burger, .tk-burger::before, .tk-burger::after {
-    content:""; display:block; width:18px; height:2px; background:var(--tk-text); border-radius:2px;
-  }
-  .tk-burger { position:relative; }
-  .tk-burger::before { position:absolute; top:-6px; }
-  .tk-burger::after  { position:absolute; top: 6px; }
-
-  /* Çekmece ve arka plan */
-  .tk-drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35);
-    opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 9998; }
-  .tk-drawer-backdrop.tk-open { opacity: 1; pointer-events: auto; }
-
-  .tk-drawer { position: fixed; left: 0; top: 0; bottom: 0; width: 290px; max-width: 85vw;
-    background: var(--tk-bg); color: var(--tk-text);
-    box-shadow: var(--tk-shadow); transform: translateX(-100%);
-    transition: transform .25s ease; z-index: 9999; display:flex; flex-direction:column; }
-  .tk-drawer.tk-open { transform: translateX(0); }
-
-  .tk-drawer-header { padding: 18px 18px 8px; border-bottom: 1px solid #e5e7eb; font-weight: 700; }
-  .tk-drawer-nav { padding: 8px; display:flex; flex-direction:column; gap:6px; }
-  .tk-nav-btn {
-    display:flex; align-items:center; gap:10px; width:100%;
-    padding:10px 12px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; cursor:pointer;
-    transition: background .15s ease; font-weight:600; color:var(--tk-text);
-  }
-  .tk-nav-btn:hover { background:#f9fafb; }
-  .tk-nav-btn small { color: var(--tk-muted); font-weight:400; }
-
-  /* Yeni bölümler (sahne) */
-  .tk-stage { position: relative; z-index: 1; }
-  .tk-section { display:none; padding:16px; max-width:900px; margin:70px auto 24px;
-    background:#fff; border:1px solid #e5e7eb; border-radius:14px; box-shadow: var(--tk-shadow); }
-  .tk-section.tk-active { display:block; }
-  .tk-h { margin:0 0 10px; font-size: 20px; }
-  .tk-sub { margin:0 0 18px; color: var(--tk-muted); }
-
-  /* Günlük kutusu */
-  .tk-textarea, .tk-input, .tk-button {
-    border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; font:inherit; background:#fff;
-  }
-  .tk-textarea { width:100%; min-height:140px; resize:vertical; }
-  .tk-button { cursor:pointer; font-weight:700; }
-  .tk-button:hover { background:#f9fafb; }
-
-  /* Görsel tahmin */
-  .tk-guess-wrap { display:grid; gap:12px; }
-  .tk-guess-canvas {
-    width:100%; max-width:700px; aspect-ratio:16/9; border-radius:12px; overflow:hidden;
-    border:1px solid #e5e7eb; background:#000; margin:8px 0;
-  }
-  .tk-img { width:100%; height:100%; object-fit:cover; filter: blur(18px) brightness(.85); transition: filter .35s ease; }
-  .tk-reveal { filter: blur(0) brightness(1); }
-  .tk-inline { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .tk-muted { color: var(--tk-muted); }
-</style>
-</head>
-<body>
-  <h1>Karımın Paneli 💖</h1>
-  <div id="countdown">Yükleniyor…</div>
-
-  <button type="button" class="red" id="add">+7 Gün</button>
-  <p class="note">BEN BİR EĞRELTİ OTUYUM... BEN ETTİM SEN ETME GÜZEL KARIM</p>
-
-  <button type="button" class="green" id="sub">-2 Gün</button>
-  <p class="note">SEN DÜNYALAR GÜZELİSİN KOCAN İÇİN DURMA VE BİR KERE DAHA BAS</p>
-
-  <!-- Sesler -->
-  <audio id="bgm" autoplay loop playsinline>
-    <source src="ask-sarkisi.mp3" type="audio/mpeg" />
-  </audio>
-  <audio id="effectAdd" src="plus.mp3"></audio>
-  <audio id="effectSub" src="minus.mp3"></audio>
-
+  <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+    // Senin Firebase yapılandırman
     const firebaseConfig = {
-      apiKey: "AIzaSyDTGdDhF7ISSn2kGTW5euU16-716kDs1RE",
-      authDomain: "endless-love-v2.firebaseapp.com",
-      databaseURL: "https://endless-love-v2-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "endless-love-v2",
-      storageBucket: "endless-love-v2.appspot.com",
-      messagingSenderId: "1098354580",
-      appId: "1:1098354580:web:b214f9c82e6ce423190981"
+      apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
+      authDomain: "endless-love-f201c.firebaseapp.com",
+      projectId: "endless-love-f201c",
+      storageBucket: "endless-love-f201c.firebasestorage.app",
+      messagingSenderId: "144384066384",
+      appId: "1:144384066384:web:b583d194fba60954fee255"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    const db = getFirestore(app);
 
-    const refDate = ref(db, "targetDate");
-    const refAddCount = ref(db, "addcount");
-    const refSubCount = ref(db, "subcount");
-
-    const countdownEl = document.getElementById("countdown");
-    const btnAdd = document.getElementById("add");
-    const btnSub = document.getElementById("sub");
-    const bgm = document.getElementById("bgm");
-    const effectAdd = document.getElementById("effectAdd");
-    const effectSub = document.getElementById("effectSub");
-
-    let timerId = null;
-    let lastISO = null; // aynı değer gelirse yeniden başlatma
-
-    function startCountdown(targetISO){
-      // aynı ISO geldiyse yeniden kurma
-      if (lastISO === targetISO) return;
-      lastISO = targetISO;
-
-      const target = new Date(targetISO);
-      if (timerId) { clearInterval(timerId); timerId = null; }
-
-      const render = () => {
-        const diffMs = target.getTime() - Date.now();
-        if (diffMs <= 0){
-          countdownEl.textContent = "Bugün sevgili oluyorsunuz! 🎉";
-          if (timerId) { clearInterval(timerId); timerId = null; }
-          return;
-        }
-        const totalSec = Math.floor(diffMs / 1000);
-        const days = Math.floor(totalSec / 86400);
-        const hours = Math.floor((totalSec % 86400) / 3600);
-        const minutes = Math.floor((totalSec % 3600) / 60);
-        const seconds = totalSec % 60;
-        countdownEl.textContent = `${days}g ${hours}sa ${minutes}dk ${seconds}sn kaldı…`;
-      };
-
-      render();
-      timerId = setInterval(render, 1000);
-    }
-
-    // Hedef tarih canlı dinleme (tek sayaç)
-    onValue(refDate, (snap)=>{
-      if (snap.exists()) startCountdown(snap.val());
-      else countdownEl.textContent = "Tarih ayarlanmadı.";
-    });
-
-    // Çifte tıkla yarışı engellemek için kısa kilit
-    let busy = false;
-    async function updateDays(amount){
-      if (busy) return;
-      busy = true;
-      btnAdd.disabled = true; btnSub.disabled = true;
-
+    // Firestore kayıt fonksiyonları
+    async function saveEntry(type, text) {
       try {
-        const snap = await get(refDate);
-        if (!snap.exists()) return;
-
-        // Tarihi değiştir
-        const current = new Date(snap.val());
-        current.setDate(current.getDate() + amount);
-        const newISO = current.toISOString();
-        await set(refDate, newISO); // onValue tetiklenir → sayaç resetlenir
-
-        // İstatistik artır
-        if (amount > 0){
-          const s = await get(refAddCount); await set(refAddCount, (s.val() || 0) + 1);
-        } else {
-          const s = await get(refSubCount); await set(refSubCount, (s.val() || 0) + 1);
-        }
-
-        // Efekt ve müzik
-        const effect = amount > 0 ? effectAdd : effectSub;
-        try { bgm.pause(); await effect.play(); } catch {}
-        effect.onended = () => { bgm.play().catch(()=>{}); };
-
-      } finally {
-        // 500ms sonra butonları tekrar aç
-        setTimeout(()=>{ busy = false; btnAdd.disabled = false; btnSub.disabled = false; }, 500);
+        await addDoc(collection(db, type), {
+          text,
+          createdAt: serverTimestamp()
+        });
+      } catch (e) {
+        console.error("Firestore hatası:", e);
       }
     }
 
-    btnAdd.addEventListener("click", ()=>updateDays(7));
-    btnSub.addEventListener("click", ()=>updateDays(-2));
+    // Günlük kaydetme
+    window.saveJournal = async function () {
+      const input = document.getElementById("journalInput");
+      if (input.value.trim() !== "") {
+        await saveEntry("journal", input.value.trim());
+        input.value = "";
+      }
+    };
 
-    // iOS / masaüstü: ilk dokunuşta müzik
-    document.body.addEventListener("click", ()=>{
-      if (bgm.paused) bgm.play().catch(()=>{});
-    }, { once:true });
-<!-- ===== TK: Sol üst 3 çizgi ===== -->
-<div class="tk-fab" id="tkFab" title="Menü">
-  <span class="tk-burger"></span>
-</div>
+    // Tahmin kaydetme
+    window.saveGuess = async function () {
+      const input = document.getElementById("guessInput");
+      if (input.value.trim() !== "") {
+        await saveEntry("guesses", input.value.trim());
+        input.value = "";
+      }
+    };
 
-<!-- Arka plan + Çekmece -->
-<div class="tk-drawer-backdrop" id="tkBackdrop"></div>
-<aside class="tk-drawer" id="tkDrawer" aria-label="Yan Menü">
-  <div class="tk-drawer-header">Menü</div>
-  <nav class="tk-drawer-nav">
-    <!-- NOT: Sayaç zaten sayfanda var; bu düğme sadece diğer panelleri kapatır -->
-    <button class="tk-nav-btn" data-target="counter">⏳ Sayaç <small>(mevcut)</small></button>
-    <button class="tk-nav-btn" data-target="journal">📓 Günlük <small>(metin kutusu)</small></button>
-    <button class="tk-nav-btn" data-target="guess">🎞️ Görsel Tahmin Oyunu <small>(4-5 foto)</small></button>
-  </nav>
-</aside>
+    // Günlükleri canlı göster
+    const journalBox = document.getElementById("journalBox");
+    const q = query(collection(db, "journal"), orderBy("createdAt", "desc"));
+    onSnapshot(q, (snapshot) => {
+      journalBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const p = document.createElement("p");
+        p.textContent = "📓 " + doc.data().text;
+        journalBox.appendChild(p);
+      });
+    });
 
-<!-- ===== Yeni Bölümler Sahnesi ===== -->
-<main class="tk-stage" id="tkStage">
-  <!-- Günlük -->
-  <section class="tk-section" id="tk-sec-journal" aria-labelledby="tk-journal-h">
-    <h3 class="tk-h" id="tk-journal-h">Günlük</h3>
-    <p class="tk-sub">Aşağıya gününle ilgili istediğini yaz. Sadece bu cihazda kalır (şimdilik).</p>
-    <textarea class="tk-textarea" id="tkJournalBox"
-      placeholder="günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam."></textarea>
-    <div class="tk-inline" style="margin-top:8px">
-      <button class="tk-button" id="tkJournalSave">Kaydet</button>
-      <span class="tk-muted" id="tkJournalMsg"></span>
-    </div>
-  </section>
+    // Tahminleri canlı göster
+    const guessBox = document.getElementById("guessBox");
+    const q2 = query(collection(db, "guesses"), orderBy("createdAt", "desc"));
+    onSnapshot(q2, (snapshot) => {
+      guessBox.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const p = document.createElement("p");
+        p.textContent = "💡 " + doc.data().text;
+        guessBox.appendChild(p);
+      });
+    });
+  </script>
 
-  <!-- Görsel Tahmin Oyunu -->
-  <section class="tk-section" id="tk-sec-guess" aria-labelledby="tk-guess-h">
-    <h3 class="tk-h" id="tk-guess-h">Görsel Tahmin Oyunu</h3>
-    <p class="tk-sub">Foto giderek netleşirken tahmin et; sonra bu foto sana ne hissettirdi yaz.</p>
-
-    <div class="tk-guess-wrap">
-      <div class="tk-guess-canvas">
-        <img id="tkGuessImg" class="tk-img" alt="Tahmin Görseli" src="" />
-      </div>
-
-      <div class="tk-inline">
-        <input class="tk-input" id="tkGuessInput" type="text" placeholder="Tahminin (örn: sahil, park, ev…)" />
-        <button class="tk-button" id="tkGuessBtn">Tahmin Et</button>
-        <button class="tk-button" id="tkHintBtn">İpucu</button>
-        <span class="tk-muted" id="tkGuessMsg"></span>
-      </div>
-
-      <div>
-        <p class="tk-muted" id="tkFeelingPrompt" style="margin:6px 0 8px">
-          Bu foto ne hissettirdi? Kısaca yaz.
-        </p>
-        <textarea class="tk-textarea" id="tkFeelingBox"
-          placeholder="(kutucuğa tıklayınca bu yazı kaybolur)"></textarea>
-        <div class="tk-inline" style="margin-top:8px">
-          <button class="tk-button" id="tkFeelingSave">Notu Kaydet</button>
-          <span class="tk-muted" id="tkFeelingMsg"></span>
-        </div>
-      </div>
-    </div>
-  </section>
-</main>
-
-<script>
-/* ========== Çekmece Kontrol ========== */
-(function(){
-  const fab = document.getElementById('tkFab');
-  const drawer = document.getElementById('tkDrawer');
-  const backdrop = document.getElementById('tkBackdrop');
-  const navBtns = drawer.querySelectorAll('[data-target]');
-  const journal = document.getElementById('tk-sec-journal');
-  const guess   = document.getElementById('tk-sec-guess');
-  const sections = [journal, guess];
-
-  const openDrawer = ()=>{ drawer.classList.add('tk-open'); backdrop.classList.add('tk-open'); };
-  const closeDrawer = ()=>{ drawer.classList.remove('tk-open'); backdrop.classList.remove('tk-open'); };
-
-  fab.addEventListener('click', openDrawer);
-  backdrop.addEventListener('click', closeDrawer);
-  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
-
-  function show(which){
-    // Sayaç = ikisini kapat (mevcut sayaç zaten sayfada)
-    if(which==='counter'){ sections.forEach(s=>s.classList.remove('tk-active')); closeDrawer(); location.hash = 'sayac'; return; }
-    // Günlük ya da Tahmin
-    sections.forEach(s=> s.classList.toggle('tk-active', s.id === (which==='journal'?'tk-sec-journal':'tk-sec-guess')));
-    closeDrawer();
-    location.hash = (which==='journal'?'gunluk':'tahmin');
-    // Üste doğru nazikçe kaydır
-    const active = document.querySelector('.tk-section.tk-active');
-    if(active) active.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  navBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=> show(btn.getAttribute('data-target')));
-  });
-
-  // Sayfa yenilenince hash'e göre göster
-  const h = (location.hash||'').replace('#','');
-  if (h==='gunluk') journal.classList.add('tk-active');
-  if (h==='tahmin') guess.classList.add('tk-active');
-})();
-
-/* ========== Günlük ========== */
-(function(){
-  const BOX = document.getElementById('tkJournalBox');
-  const SAVE= document.getElementById('tkJournalSave');
-  const MSG = document.getElementById('tkJournalMsg');
-  const KEY = 'tk_journal_last';
-
-  // Placeholder cümlesi tıklanınca silinsin:
-  BOX.addEventListener('focus', ()=> {
-    if(BOX.value.trim()==='') BOX.placeholder='';
-  });
-  BOX.addEventListener('blur', ()=> {
-    if(BOX.value.trim()==='') BOX.placeholder='günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.';
-  });
-
-  // İstersen son yazılanı hatırlasın:
-  try {
-    const last = localStorage.getItem(KEY);
-    if(last) BOX.value = last;
-  } catch {}
-
-  SAVE.addEventListener('click', ()=>{
-    try { localStorage.setItem(KEY, BOX.value); } catch {}
-    MSG.textContent = 'Kaydedildi (bu cihazda).';
-    setTimeout(()=> MSG.textContent='', 2000);
-  });
-})();
-
-/* ========== Görsel Tahmin Oyunu ========== */
-(function(){
-  // --- Buraya KENDİ FOTOĞRAFLARINI ekle ---
-  // src: görüntü URL'in; answers: kabul edilecek tahminler (küçük/ büyük fark etmez)
-  const items = [
-    // ÖRNEKLER (değiştir):
-    { src:'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1600&auto=format&fit=crop', answers:['deniz','sahil','beach','sea','okyanus'] },
-    { src:'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1600&auto=format&fit=crop', answers:['orman','ağaç','forest','woods'] },
-    { src:'https://images.unsplash.com/photo-1491553895911-0055eca6402d?q=80&w=1600&auto=format&fit=crop', answers:['şehir','city','gökdelen','skyscraper'] },
-    // Kendi URL'lerini ekle:
-    // { src:'https://SENIN-FOTO-1.jpg', answers:['ipucu1','ipucu2'] },
-    // { src:'https://SENIN-FOTO-2.jpg', answers:['ipucu'] },
-  ];
-
-  const img   = document.getElementById('tkGuessImg');
-  const input = document.getElementById('tkGuessInput');
-  const btn   = document.getElementById('tkGuessBtn');
-  const hint  = document.getElementById('tkHintBtn');
-  const msg   = document.getElementById('tkGuessMsg');
-  const feelP = document.getElementById('tkFeelingPrompt');
-  const feelB = document.getElementById('tkFeelingBox');
-  const feelS = document.getElementById('tkFeelingSave');
-  const feelM = document.getElementById('tkFeelingMsg');
-
-  const INDEX_KEY = 'tk_guess_index';
-  let index = 0;
-  try { index = Number(localStorage.getItem(INDEX_KEY)||'0') % (items.length||1); } catch {}
-
-  // Rastgele his/duygu cümlesi
-  const prompts = [
-    'Bu kare sende hangi duyguyu uyandırdı?',
-    'İlk bakışta aklına ne geldi?',
-    'Bu anı bir kelimeyle tarif et.',
-    'Bu foto senin için ne ifade ediyor?'
-  ];
-  function pickPrompt(){
-    feelP.textContent = prompts[Math.floor(Math.random()*prompts.length)];
-  }
-
-  function norm(s){ return (s||'').toLowerCase().trim()
-    .replace(/ı/g,'i').replace(/ü/g,'u').replace(/ö/g,'o').replace(/ş/g,'s').replace(/ğ/g,'g').replace(/ç/g,'c'); }
-
-  function load(i){
-    if(!items.length){ img.removeAttribute('src'); msg.textContent='Fotoğraf listesi boş. Lütfen JS’te items dizisine URL ekle.'; return; }
-    const it = items[i];
-    img.classList.remove('tk-reveal');
-    img.style.filter = 'blur(18px) brightness(.85)';
-    img.src = it.src;
-    msg.textContent = 'İpucu istersen “İpucu”ya tıkla.';
-    input.value = '';
-    feelB.value = '';
-    feelB.placeholder = '(kutucuğa tıklayınca bu yazı kaybolur)';
-    pickPrompt();
-    gradual();
-  }
-
-  // Blur’ü 6 adımda azalt (1.5 sn aralık)
-  function gradual(){
-    let step = 0, total = 6, base = 18;
-    const t = setInterval(()=>{
-      step++;
-      const blur = Math.max(0, base - (step*(base/total)));
-      img.style.filter = `blur(${blur}px) brightness(${1 - (blur/60)})`;
-      if(step>=total) clearInterval(t);
-    }, 1500);
-  }
-
-  btn.addEventListener('click', ()=>{
-    const guess = norm(input.value);
-    const answers = items[index].answers.map(norm);
-    if (guess && answers.some(a=> guess.includes(a) || a.includes(guess))) {
-      img.classList.add('tk-reveal');
-      msg.textContent = 'Doğru! 🎉';
-      setTimeout(()=>{
-        index = (index + 1) % items.length;
-        try { localStorage.setItem(INDEX_KEY, String(index)); } catch {}
-        load(index);
-      }, 2500);
-    } else {
-      msg.textContent = 'Yaklaştın. Bir ipucu daha isteyebilirsin.';
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #ffe6f0;
     }
-  });
+    header {
+      background: #ff4d6d;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      position: relative;
+    }
+    .menu-btn {
+      position: absolute;
+      left: 10px;
+      top: 15px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+    nav {
+      width: 200px;
+      background: #333;
+      color: white;
+      height: 100%;
+      position: fixed;
+      left: -200px;
+      top: 0;
+      transition: 0.3s;
+      padding-top: 60px;
+    }
+    nav a {
+      display: block;
+      padding: 12px;
+      color: white;
+      text-decoration: none;
+    }
+    nav a:hover {
+      background: #444;
+    }
+    .show {
+      left: 0;
+    }
+    section {
+      padding: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      font-size: 1em;
+      padding: 10px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #ff4d6d;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    button:hover {
+      background: #e63950;
+    }
+    #countdown {
+      font-size: 2em;
+      margin-top: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="menu-btn" onclick="toggleMenu()">☰</span>
+    Tuuba Paneli
+  </header>
 
-  hint.addEventListener('click', ()=>{
-    const a = items[index].answers[0] || '';
-    if(!a){ msg.textContent='Bu foto için cevap listesi boş.'; return; }
-    msg.textContent = `İpucu: ${a[0]}… (${a.length} harf)`;
-  });
+  <nav id="sideMenu">
+    <a href="#sayac">Sayaç</a>
+    <a href="#gunluk">Günlük</a>
+    <a href="#tahmin">Görsel Tahmin</a>
+  </nav>
 
-  // His kutusu: tıklayınca yazı kaybolsun
-  feelB.addEventListener('focus', ()=>{
-    if(feelB.value.trim()==='') feelB.placeholder='';
-  });
-  feelB.addEventListener('blur', ()=>{
-    if(feelB.value.trim()==='') feelB.placeholder='(kutucuğa tıklayınca bu yazı kaybolur)';
-  });
-  feelS.addEventListener('click', ()=>{
-    // Şimdilik sadece cihazda mesaj göster; istersen localStorage’a da atarız.
-    feelM.textContent = 'Not kayıt edildi (bu cihazda).';
-    setTimeout(()=> feelM.textContent='', 2000);
-  });
+  <!-- Sayaç -->
+  <section id="sayac">
+    <h2>⏳ Geri Sayım</h2>
+    <div id="countdown"></div>
+  </section>
 
-  // İlk yükleme
-  load(index);
-})();
-</script>
+  <!-- Günlük -->
+  <section id="gunluk">
+    <h2>📖 Günlük</h2>
+    <p>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</p>
+    <textarea id="journalInput" placeholder="Günlüğünü buraya yaz..."></textarea>
+    <button onclick="saveJournal()">Kaydet</button>
+    <div id="journalBox"></div>
+  </section>
+
+  <!-- Görsel Tahmin -->
+  <section id="tahmin">
+    <h2>🖼️ Görsel Tahmin</h2>
+    <img src="resim1.jpg" alt="Tahmin" width="200">
+    <p>Bu fotoğraf sana ne hissettiriyor?</p>
+    <textarea id="guessInput" placeholder="Tahminini buraya yaz..."></textarea>
+    <button onclick="saveGuess()">Kaydet</button>
+    <div id="guessBox"></div>
+  </section>
+
+  <script>
+    function toggleMenu() {
+      document.getElementById("sideMenu").classList.toggle("show");
+    }
+
+    // Sayaç (başlangıç: 6 Ağustos 2025, süre: 40 gün)
+    const startDate = new Date("2025-08-06T00:00:00").getTime();
+    const duration = 40 * 24 * 60 * 60 * 1000;
+    const endDate = startDate + duration;
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const remaining = endDate - now;
+
+      if (remaining < 0) {
+        document.getElementById("countdown").innerText = "Bitti!";
+        return;
+      }
+
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+      document.getElementById("countdown").innerText =
+        `${days}g ${hours}s ${minutes}d ${seconds}sn`;
+    }
+
+    setInterval(updateCountdown, 1000);
+  </script>
 </body>
 </html>
-
-
-
-
