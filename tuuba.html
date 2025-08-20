@@ -3,302 +3,358 @@
 <head>
   <meta charset="UTF-8">
   <title>Tuuba ❤️</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
+    /* ---------- GENEL ---------- */
+    :root{
+      --pink:#d63384;
+      --pink-dark:#a02362;
+      --bg:#ffe6f0;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; padding:0;
       font-family: Arial, sans-serif;
-      background-color: #ffe6f0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
+      background-color: var(--bg);
+      display:flex; justify-content:center; align-items:center;
+      min-height:100vh; overflow:hidden;
     }
-    .container {
-      width: 90%;
-      max-width: 800px;
-      background: white;
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      text-align: center;
-      position: relative;
+    .container{
+      width:clamp(320px, 90vw, 860px);
+      background:#fff; border-radius:20px;
+      padding:20px; box-shadow:0 0 15px rgba(0,0,0,0.2);
+      text-align:center; position:relative;
     }
-    h1 {
-      color: #d63384;
+    h1{ color:var(--pink); margin:8px 0 18px }
+    h2{ margin:6px 0 10px }
+    p{ margin:8px 0 }
+
+    /* ---------- HAMBURGER & ÇEKMECE ---------- */
+    .menu-btn{
+      position:absolute; top:15px; left:15px;
+      font-size:26px; cursor:pointer; z-index:1001;
+      user-select:none;
     }
-    /* Menü butonu */
-    .menu-btn {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      font-size: 24px;
-      cursor: pointer;
-      z-index: 1000;
+    .side-menu{
+      position:fixed; top:0; left:-240px;
+      width:220px; height:100%; background:var(--pink);
+      color:#fff; padding-top:60px; transition:left .35s ease;
+      box-shadow:2px 0 5px rgba(0,0,0,.3); z-index:1000;
     }
-    /* Yan menü */
-    .side-menu {
-      position: fixed;
-      left: -220px;
-      top: 0;
-      width: 200px;
-      height: 100%;
-      background: #d63384;
-      color: white;
-      padding-top: 60px;
-      transition: 0.4s;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    .side-menu.open{ left:0 }
+    .side-menu a{
+      display:block; padding:14px 18px; text-decoration:none; color:#fff;
+      font-weight:bold; transition:background .2s ease;
     }
-    .side-menu.open {
-      left: 0;
+    .side-menu a:hover{ background:var(--pink-dark) }
+
+    /* ---------- BÖLÜMLER ---------- */
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    /* ---------- FORM ELEMANLARI ---------- */
+    textarea{
+      width:100%; min-height:120px; margin-top:10px; padding:10px;
+      border-radius:10px; border:1px solid #ccc; font-size:14px; resize:vertical;
     }
-    .side-menu a {
-      display: block;
-      padding: 15px;
-      text-decoration: none;
-      color: white;
-      transition: background 0.3s;
+    button{
+      margin:10px; padding:10px 20px; font-size:16px; border:none;
+      border-radius:10px; cursor:pointer; background:var(--pink); color:#fff;
+      transition:.25s;
     }
-    .side-menu a:hover {
-      background: #a02362;
-    }
-    /* İçerikler */
-    .section {
-      display: none;
-    }
-    .section.active {
-      display: block;
-    }
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-      resize: vertical;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      background: #d63384;
-      color: white;
-      transition: 0.3s;
-    }
-    button:hover {
-      background: #a02362;
-    }
-    img {
-      max-width: 100%;
-      border-radius: 15px;
-      margin-top: 15px;
+    button:hover{ background:var(--pink-dark); transform:translateY(-1px) }
+    img{ max-width:100%; border-radius:15px; margin-top:15px }
+
+    /* ---------- SAYAÇ ---------- */
+    #countdown{
+      font-size:2rem; margin:18px 0 6px; letter-spacing:.25px;
     }
 
-    /* Günlük listesi stili */
-    .diary-list {
-      margin-top: 16px;
-      text-align: left;
-      max-height: 260px;
-      overflow: auto;
-      border: 1px solid #eee;
-      border-radius: 12px;
-      padding: 10px 12px;
-      background: #fff8fb;
+    /* ---------- GÜNLÜK LİSTESİ ---------- */
+    .diary-list{
+      margin-top:14px; text-align:left; max-height:260px; overflow:auto;
+      border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fff8fb;
     }
-    .diary-item {
-      border-bottom: 1px dashed #e6b7cd;
-      padding: 8px 0;
-      white-space: pre-wrap;
-      line-height: 1.4;
+    .diary-item{
+      border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4;
     }
-    .diary-item:last-child {
-      border-bottom: none;
+    .diary-item:last-child{ border-bottom:none }
+    .diary-meta{
+      font-size:12px; color:#8a8a8a; margin-bottom:4px; display:block;
     }
-    .diary-meta {
-      font-size: 12px;
-      color: #8a8a8a;
-      margin-bottom: 4px;
-      display: block;
+
+    /* ---------- UYARI BANNER ---------- */
+    #warnBanner{
+      position:fixed; bottom:8px; left:8px; background:#fff3cd; color:#664d03;
+      border:1px solid #ffe69c; border-radius:8px; padding:8px 10px; font-size:12px; z-index:9999;
+      display:none;
+    }
+
+    /* ---------- RESPONSIVE DOKUNUŞ ---------- */
+    @media (max-width:480px){
+      #countdown{ font-size:1.6rem }
+      button{ width:100%; max-width:260px }
     }
   </style>
 </head>
 <body>
-  <div class="menu-btn" onclick="toggleMenu()">☰</div>
-  <div class="side-menu" id="sideMenu">
-    <a href="#" onclick="showSection('counter')">Sayaç</a>
-    <a href="#" onclick="showSection('diary')">Günlük</a>
-    <a href="#" onclick="showSection('game')">Görsel Tahmin</a>
-  </div>
+  <!-- Hamburger -->
+  <div class="menu-btn" id="menuBtn" aria-label="Menü">☰</div>
 
+  <!-- Çekmece -->
+  <nav class="side-menu" id="sideMenu">
+    <a href="#" data-target="counter">Sayaç</a>
+    <a href="#" data-target="diary">Günlük</a>
+    <a href="#" data-target="game">Görsel Tahmin</a>
+  </nav>
+
+  <!-- Uyarı banner -->
+  <div id="warnBanner"></div>
+
+  <!-- Ana Kutu -->
   <div class="container">
     <h1>❤️ Tuuba & Ben ❤️</h1>
 
     <!-- Sayaç -->
-    <div id="counter" class="section active">
+    <section id="counter" class="section active" aria-label="Sayaç">
       <h2>Kalan Gün</h2>
       <div id="countdown">Yükleniyor...</div>
-      <button id="minusBtn">-2 Gün</button>
-      <button id="plusBtn">+7 Gün</button>
-    </div>
+      <div>
+        <button id="minusBtn">-2 Gün</button>
+        <button id="plusBtn">+7 Gün</button>
+      </div>
+    </section>
 
     <!-- Günlük -->
-    <div id="diary" class="section">
+    <section id="diary" class="section" aria-label="Günlük">
       <h2>Günlük</h2>
       <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
       <textarea id="diaryText" placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
       <button id="saveDiaryBtn">Gönder</button>
 
-      <!-- Yeni: Günlük liste alanı -->
-      <div id="diaryList" class="diary-list">
-        <!-- Firestore’dan canlı doldurulacak -->
-      </div>
-    </div>
+      <div id="diaryList" class="diary-list"></div>
+    </section>
 
     <!-- Görsel Tahmin -->
-    <div id="game" class="section">
+    <section id="game" class="section" aria-label="Görsel Tahmin">
       <h2>Fotoğraf Tahmini</h2>
       <img src="foto1.jpg" alt="Fotoğraf 1">
       <p>Bu fotoğraf sana ne hissettiriyor? Tahmin et!</p>
       <textarea placeholder="Tahminini yaz..."></textarea>
-    </div>
+    </section>
 
-    <!-- Müzik -->
-    <div style="margin-top:20px;">
-      <!-- AUTOPLAY + LOOP + fallback source satırı -->
-      <audio id="bgMusic" loop autoplay>
-        <source src="ask-sarkisi.mp3" type="audio/mpeg">
-      </audio>
-    </div>
+    <!-- Arka Plan Müziği -->
+    <audio id="bgMusic" loop autoplay>
+      <source src="ask-sarkisi.mp3" type="audio/mpeg">
+    </audio>
   </div>
 
-  <!-- Ses efektleri -->
-  <audio id="plusSound" src="plus.mp3"></audio>
+  <!-- Efekt Sesleri -->
+  <audio id="plusSound"  src="plus.mp3"></audio>
   <audio id="minusSound" src="minus.mp3"></audio>
 
-  <!-- Firebase -->
+  <!-- ---------- FIREBASE / FIRESTORE (MODULE) ---------- -->
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import {
-    getFirestore,
-    doc, getDoc, setDoc, onSnapshot, Timestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+    import {
+      getFirestore,
+      doc, getDoc, setDoc, onSnapshot, Timestamp,
+      addDoc, collection, serverTimestamp, query, orderBy, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-  // Firebase config (seninkisi)
-  const firebaseConfig = {
-    apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
-    authDomain: "endless-love-f201c.firebaseapp.com",
-    projectId: "endless-love-f201c",
-    storageBucket: "endless-love-f201c.firebasestorage.app",
-    messagingSenderId: "144384066384",
-    appId: "1:144384066384:web:b583d194fba60954fee255"
-  };
+    // --- Config (senin projen) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
+      authDomain: "endless-love-f201c.firebaseapp.com",
+      projectId: "endless-love-f201c",
+      storageBucket: "endless-love-f201c.firebasestorage.app",
+      messagingSenderId: "144384066384",
+      appId: "1:144384066384:web:b583d194fba60954fee255"
+    };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
 
-  // Elemanlar
-  const countdownEl = document.getElementById("countdown");
-  const plusBtn     = document.getElementById("plusBtn");
-  const minusBtn    = document.getElementById("minusBtn");
-  const plusSound   = document.getElementById("plusSound");
-  const minusSound  = document.getElementById("minusSound");
-  const bgMusic     = document.getElementById("bgMusic");
+    // --- Elemanlar ---
+    const countdownEl = document.getElementById("countdown");
+    const plusBtn     = document.getElementById("plusBtn");
+    const minusBtn    = document.getElementById("minusBtn");
+    const plusSound   = document.getElementById("plusSound");
+    const minusSound  = document.getElementById("minusSound");
+    const bgMusic     = document.getElementById("bgMusic");
 
-  // Sayaç doc yolu
-  const ref = doc(db, "counter", "main");
-  let endDate = null;
+    const diaryText   = document.getElementById("diaryText");
+    const saveDiaryBtn= document.getElementById("saveDiaryBtn");
+    const diaryList   = document.getElementById("diaryList");
 
-  // Ekranı güncelle
-  function updateCountdown(){
-    if(!endDate) return;
-    const now  = new Date();
-    const diff = endDate - now;
-    const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
-    countdownEl.textContent = `${days} Gün kaldı`;
-  }
-
-  // Her zaman Timestamp yaz
-  async function writeEndDate(dateObj){
-    await setDoc(ref, { endDate: Timestamp.fromDate(dateObj) });
-  }
-
-  // İlk yükleme
-  (async function init(){
-    try{
-      const snap = await getDoc(ref);
-      if (snap.exists()){
-        const d = snap.data();
-        if (d.endDate?.toDate){
-          endDate = d.endDate.toDate();          // Timestamp → Date
-        } else {
-          endDate = new Date(d.endDate || Date.now()); // Eski string ise
-          await writeEndDate(endDate);                 // Timestamp’e çevir
-        }
-      } else {
-        endDate = new Date();
-        endDate.setDate(endDate.getDate() + 40); // varsayılan
-        await writeEndDate(endDate);
-      }
-      updateCountdown();
-    }catch(e){
-      // Firestore çalışmasa bile yerel fallback
-      endDate = new Date();
-      endDate.setDate(endDate.getDate() + 40);
-      updateCountdown();
+    // --- Küçük uyarı yardımcıları ---
+    const warnBanner = document.getElementById("warnBanner");
+    function showWarn(msg){
+      warnBanner.textContent = msg;
+      warnBanner.style.display = "block";
+      setTimeout(()=>{ warnBanner.style.display="none"; }, 4000);
     }
 
-    // Gerçek zamanlı dinle
-    onSnapshot(ref, (ds)=>{
-      const d = ds.data();
-      if (d?.endDate?.toDate){
-        endDate = d.endDate.toDate();
+    // --- Sayaç dokümanı ---
+    const ref = doc(db, "counter", "main");
+    let endDate = null;
+
+    function updateCountdown(){
+      if(!endDate) return;
+      const now  = new Date();
+      const diff = endDate - now;
+      const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+      countdownEl.textContent = `${days} Gün kaldı`;
+    }
+
+    // Her zaman Timestamp yaz (tip tutarlılığı)
+    async function writeEndDate(dateObj){
+      try{
+        await setDoc(ref, { endDate: Timestamp.fromDate(dateObj) });
+      }catch(e){
+        console.error("setDoc hata:", e);
+        showWarn("Sayaç Firestore'a yazılamadı (bağlantı sorunu olabilir).");
+      }
+    }
+
+    // İlk yükleme + eski kayıt dönüşümü
+    (async function initCounter(){
+      try{
+        const snap = await getDoc(ref);
+        if (snap.exists()){
+          const d = snap.data();
+          if (d.endDate?.toDate){
+            endDate = d.endDate.toDate();          // Timestamp → Date
+          } else {
+            endDate = new Date(d.endDate || Date.now()); // Eski string ise
+            await writeEndDate(endDate);                 // Timestamp’e çevir
+          }
+        } else {
+          endDate = new Date();
+          endDate.setDate(endDate.getDate() + 40);
+          await writeEndDate(endDate);
+        }
+      }catch(e){
+        console.error("İlk sayaç okuma hatası:", e);
+        // Firestore yoksa yerel fallback
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() + 40);
+        showWarn("Firestore okunamadı; sayaç yerel çalışıyor.");
+      }finally{
         updateCountdown();
       }
-    });
-  })();
 
-  // Müzik + efekt
-  function playEffectThenResume(soundEl){
-    const wasPlaying = !bgMusic.paused;
-    try{ bgMusic.pause(); }catch{}
-    try{ soundEl.currentTime = 0; soundEl.play(); }catch{}
-    soundEl.onended = () => { if (wasPlaying){ try{ bgMusic.play(); }catch{} } };
-  }
+      // Realtime dinle: başka cihazdan değişirse yansısın
+      try{
+        onSnapshot(ref, (ds)=>{
+          const d = ds.data();
+          if (d?.endDate?.toDate){
+            endDate = d.endDate.toDate();
+            updateCountdown();
+          }
+        });
+      }catch(e){
+        console.warn("onSnapshot kurulamadı:", e);
+      }
+    })();
 
-  // +7
-  plusBtn.addEventListener("click", async () => {
-    if(!endDate) return;
-    playEffectThenResume(plusSound);
-    endDate.setDate(endDate.getDate() + 7);
-    await writeEndDate(endDate);
-    updateCountdown();
-  });
-
-  // -2
-  minusBtn.addEventListener("click", async () => {
-    if(!endDate) return;
-    playEffectThenResume(minusSound);
-    endDate.setDate(endDate.getDate() - 2);
-    await writeEndDate(endDate);
-    updateCountdown();
-  });
-
-  // Her saniye ekranda sayı aksın
-  setInterval(updateCountdown, 1000);
-
-  // Autoplay engellenirse ilk tıklamada başlat
-  document.body.addEventListener("click", () => {
-    if (bgMusic && bgMusic.paused){
-      try{ bgMusic.play(); }catch{}
+    // Müzik + efekt akışı
+    function playEffectThenResume(soundEl){
+      const wasPlaying = !bgMusic.paused;
+      try{ bgMusic.pause(); }catch{}
+      try{ soundEl.currentTime = 0; soundEl.play(); }catch{}
+      soundEl.onended = () => { if (wasPlaying){ try{ bgMusic.play(); }catch{} } };
     }
-  }, { once: true });
-</script>
+
+    plusBtn.addEventListener("click", async () => {
+      if(!endDate) return;
+      playEffectThenResume(plusSound);
+      endDate.setDate(endDate.getDate() + 7);
+      await writeEndDate(endDate);
+      updateCountdown();
+    });
+
+    minusBtn.addEventListener("click", async () => {
+      if(!endDate) return;
+      playEffectThenResume(minusSound);
+      endDate.setDate(endDate.getDate() - 2);
+      await writeEndDate(endDate);
+      updateCountdown();
+    });
+
+    // Sayaç ekranda aktıkça görünsün
+    setInterval(updateCountdown, 1000);
+
+    // Autoplay engellenirse: ilk tıklamada başlat
+    document.body.addEventListener("click", () => {
+      if (bgMusic && bgMusic.paused){
+        try{ bgMusic.play(); }catch{}
+      }
+    }, { once:true });
+
+    // --- Günlük: kaydet + canlı liste ---
+    saveDiaryBtn.addEventListener("click", async () => {
+      const text = (diaryText.value || "").trim();
+      if(!text) return;
+      try{
+        await addDoc(collection(db, "diary"), {
+          text,
+          createdAt: serverTimestamp()
+        });
+        diaryText.value = "";
+      }catch(e){
+        console.error("diary add hata:", e);
+        showWarn("Günlük kaydedilemedi.");
+      }
+    });
+
+    const qDiary = query(
+      collection(db, "diary"),
+      orderBy("createdAt", "desc"),
+      limit(100)
+    );
+
+    onSnapshot(qDiary, (snap)=>{
+      diaryList.innerHTML = "";
+      snap.forEach((docSnap)=>{
+        const d  = docSnap.data();
+        const ts = d.createdAt?.toDate ? d.createdAt.toDate() : null;
+        const when = ts ? ts.toLocaleString("tr-TR") : "(tarih bekleniyor)";
+        const item = document.createElement("div");
+        item.className = "diary-item";
+
+        const meta = document.createElement("span");
+        meta.className = "diary-meta";
+        meta.textContent = `🕒 ${when}`;
+
+        const content = document.createElement("div");
+        content.textContent = d.text || "";
+
+        item.appendChild(meta);
+        item.appendChild(content);
+        diaryList.appendChild(item);
+      });
+    });
+  </script>
+
+  <!-- ---------- MENÜ (GLOBAL, MODULE DEĞİL) ---------- -->
+  <script>
+    // Hamburger aç/kapa
+    (function(){
+      const menuBtn  = document.getElementById("menuBtn");
+      const sideMenu = document.getElementById("sideMenu");
+      menuBtn.addEventListener("click", ()=> sideMenu.classList.toggle("open"));
+      // Linklere tıklayınca ilgili alanı göster
+      sideMenu.querySelectorAll("a").forEach(a=>{
+        a.addEventListener("click", (e)=>{
+          e.preventDefault();
+          const id = a.getAttribute("data-target");
+          document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+          document.getElementById(id).classList.add("active");
+          sideMenu.classList.remove("open");
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
-
