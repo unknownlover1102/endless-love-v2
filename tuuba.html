@@ -5,113 +5,75 @@
   <title>Tuuba ❤️</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* ---------- GENEL ---------- */
-    :root{
-      --pink:#d63384;
-      --pink-dark:#a02362;
-      --bg:#ffe6f0;
-    }
-    *{box-sizing:border-box}
+    :root{ --pink:#d63384; --pink-dark:#a02362; --bg:#ffe6f0; }
+    *{ box-sizing:border-box }
     body{
-      margin:0; padding:0;
-      font-family: Arial, sans-serif;
-      background-color: var(--bg);
-      display:flex; justify-content:center; align-items:center;
-      min-height:100vh; overflow:hidden;
+      margin:0; padding:0; font-family:Arial, sans-serif; background:var(--bg);
+      display:flex; justify-content:center; align-items:center; min-height:100vh; overflow:hidden;
     }
     .container{
-      width:clamp(320px, 90vw, 860px);
-      background:#fff; border-radius:20px;
-      padding:20px; box-shadow:0 0 15px rgba(0,0,0,0.2);
-      text-align:center; position:relative;
+      width:clamp(320px, 90vw, 860px); background:#fff; border-radius:20px; padding:20px;
+      box-shadow:0 0 15px rgba(0,0,0,.2); text-align:center; position:relative;
     }
     h1{ color:var(--pink); margin:8px 0 18px }
     h2{ margin:6px 0 10px }
     p{ margin:8px 0 }
 
-    /* ---------- HAMBURGER & ÇEKMECE ---------- */
-    .menu-btn{
-      position:absolute; top:15px; left:15px;
-      font-size:26px; cursor:pointer; z-index:1001;
-      user-select:none;
-    }
+    /* Hamburger & Drawer */
+    .menu-btn{ position:absolute; top:15px; left:15px; font-size:26px; cursor:pointer; z-index:1001; user-select:none }
     .side-menu{
-      position:fixed; top:0; left:-240px;
-      width:220px; height:100%; background:var(--pink);
-      color:#fff; padding-top:60px; transition:left .35s ease;
-      box-shadow:2px 0 5px rgba(0,0,0,.3); z-index:1000;
+      position:fixed; top:0; left:-240px; width:220px; height:100%; background:var(--pink); color:#fff;
+      padding-top:60px; transition:left .35s ease; box-shadow:2px 0 5px rgba(0,0,0,.3); z-index:1000;
     }
     .side-menu.open{ left:0 }
-    .side-menu a{
-      display:block; padding:14px 18px; text-decoration:none; color:#fff;
-      font-weight:bold; transition:background .2s ease;
-    }
+    .side-menu a{ display:block; padding:14px 18px; text-decoration:none; color:#fff; font-weight:bold; transition:background .2s }
     .side-menu a:hover{ background:var(--pink-dark) }
 
-    /* ---------- BÖLÜMLER ---------- */
-    .section{ display:none; }
-    .section.active{ display:block; }
+    /* Sections */
+    .section{ display:none }
+    .section.active{ display:block }
 
-    /* ---------- FORM ELEMANLARI ---------- */
     textarea{
-      width:100%; min-height:120px; margin-top:10px; padding:10px;
-      border-radius:10px; border:1px solid #ccc; font-size:14px; resize:vertical;
+      width:100%; min-height:120px; margin-top:10px; padding:10px; border-radius:10px; border:1px solid #ccc; font-size:14px; resize:vertical;
     }
     button{
-      margin:10px; padding:10px 20px; font-size:16px; border:none;
-      border-radius:10px; cursor:pointer; background:var(--pink); color:#fff;
-      transition:.25s;
+      margin:10px; padding:10px 20px; font-size:16px; border:none; border-radius:10px; cursor:pointer;
+      background:var(--pink); color:#fff; transition:.25s;
     }
     button:hover{ background:var(--pink-dark); transform:translateY(-1px) }
     img{ max-width:100%; border-radius:15px; margin-top:15px }
 
-    /* ---------- SAYAÇ ---------- */
-    #countdown{
-      font-size:2rem; margin:18px 0 6px; letter-spacing:.25px;
-    }
+    #countdown{ font-size:2rem; margin:18px 0 6px; letter-spacing:.25px }
 
-    /* ---------- GÜNLÜK LİSTESİ ---------- */
     .diary-list{
-      margin-top:14px; text-align:left; max-height:260px; overflow:auto;
-      border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fff8fb;
+      margin-top:14px; text-align:left; max-height:260px; overflow:auto; border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fff8fb;
     }
-    .diary-item{
-      border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4;
-    }
+    .diary-item{ border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4 }
     .diary-item:last-child{ border-bottom:none }
-    .diary-meta{
-      font-size:12px; color:#8a8a8a; margin-bottom:4px; display:block;
-    }
+    .diary-meta{ font-size:12px; color:#8a8a8a; margin-bottom:4px; display:block }
 
-    /* ---------- UYARI BANNER ---------- */
     #warnBanner{
-      position:fixed; bottom:8px; left:8px; background:#fff3cd; color:#664d03;
-      border:1px solid #ffe69c; border-radius:8px; padding:8px 10px; font-size:12px; z-index:9999;
-      display:none;
+      position:fixed; bottom:8px; left:8px; background:#fff3cd; color:#664d03; border:1px solid #ffe69c;
+      border-radius:8px; padding:8px 10px; font-size:12px; z-index:9999; display:none;
     }
 
-    /* ---------- RESPONSIVE DOKUNUŞ ---------- */
-    @media (max-width:480px){
-      #countdown{ font-size:1.6rem }
-      button{ width:100%; max-width:260px }
-    }
+    @media (max-width:480px){ #countdown{ font-size:1.6rem } button{ width:100%; max-width:260px } }
   </style>
 </head>
 <body>
   <!-- Hamburger -->
   <div class="menu-btn" id="menuBtn" aria-label="Menü">☰</div>
 
-  <!-- Çekmece -->
+  <!-- Drawer -->
   <nav class="side-menu" id="sideMenu">
     <a href="#" data-target="counter">Sayaç</a>
     <a href="#" data-target="diary">Günlük</a>
     <a href="#" data-target="game">Görsel Tahmin</a>
   </nav>
 
-  <!-- Uyarı banner -->
+  <!-- Uyarı -->
   <div id="warnBanner"></div>
 
-  <!-- Ana Kutu -->
   <div class="container">
     <h1>❤️ Tuuba & Ben ❤️</h1>
 
@@ -131,7 +93,6 @@
       <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
       <textarea id="diaryText" placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
       <button id="saveDiaryBtn">Gönder</button>
-
       <div id="diaryList" class="diary-list"></div>
     </section>
 
@@ -149,165 +110,196 @@
     </audio>
   </div>
 
-  <!-- Efekt Sesleri -->
-  <audio id="plusSound"  src="plus.mp3"></audio>
-  <audio id="minusSound" src="minus.mp3"></audio>
+  <!-- Efekt Sesleri (preload) -->
+  <audio id="plusSound"  src="plus.mp3"  preload="auto"></audio>
+  <audio id="minusSound" src="minus.mp3" preload="auto"></audio>
 
-  <!-- ---------- FIREBASE / FIRESTORE (MODULE) ---------- -->
+  <!-- ====== MODULE: Firebase (RTDB + Firestore) ====== -->
   <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  /* Günlük için Firestore (AYNI KALSIN) */
-  import {
-    getFirestore,
-    addDoc, collection, serverTimestamp,
-    query, orderBy, onSnapshot, limit
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-  /* Sayaç için Realtime Database (YENİ) */
-  import {
-    getDatabase, ref, get, set, onValue
-  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 
-  // --- Senin Firebase config'in ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
-    authDomain: "endless-love-f201c.firebaseapp.com",
-    projectId: "endless-love-f201c",
-    storageBucket: "endless-love-f201c.firebasestorage.app",
-    messagingSenderId: "144384066384",
-    appId: "1:144384066384:web:b583d194fba60954fee255"
-    // Eğer Realtime DB farklı projedeyse (ekranda gördüğün URL),
-    // aşağıyı açıp kendi RTDB URL’ini ekle:
-    // ,databaseURL: "https://endless-love-v2-default-rtdb.europe-west1.firebasedatabase.app"
-  };
+    /* Günlük (Firestore) */
+    import {
+      getFirestore, addDoc, collection, serverTimestamp,
+      query, orderBy, onSnapshot, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-  const app  = initializeApp(firebaseConfig);
+    /* Sayaç (Realtime Database) */
+    import {
+      getDatabase, ref, get, set, onValue
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
 
-  // --- GÜNLÜK Firestore (aynen kalsın) ---
-  const fs = getFirestore(app);
-  const diaryText   = document.getElementById("diaryText");
-  const saveDiaryBtn= document.getElementById("saveDiaryBtn");
-  const diaryList   = document.getElementById("diaryList");
+    // --- Config (seninkisi + RTDB URL) ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
+      authDomain: "endless-love-f201c.firebaseapp.com",
+      projectId: "endless-love-f201c",
+      storageBucket: "endless-love-f201c.firebasestorage.app",
+      messagingSenderId: "144384066384",
+      appId: "1:144384066384:web:b583d194fba60954fee255",
+      databaseURL: "https://endless-love-v2-default-rtdb.europe-west1.firebasedatabase.app"
+    };
 
-  saveDiaryBtn.addEventListener("click", async () => {
-    const text = (diaryText.value || "").trim();
-    if (!text) return;
-    await addDoc(collection(fs, "diary"), { text, createdAt: serverTimestamp() });
-    diaryText.value = "";
-  });
+    const app   = initializeApp(firebaseConfig);
 
-  onSnapshot(
-    query(collection(fs, "diary"), orderBy("createdAt","desc"), limit(100)),
-    (snap)=>{
-      diaryList.innerHTML = "";
-      snap.forEach(d=>{
-        const x = d.data();
-        const t = x.createdAt?.toDate ? x.createdAt.toDate() : null;
-        const when = t ? t.toLocaleString("tr-TR") : "(tarih yok)";
-        const item = document.createElement("div");
-        item.className = "diary-item";
-        item.innerHTML = `<span class="diary-meta">🕒 ${when}</span><div>${x.text||""}</div>`;
-        diaryList.appendChild(item);
-      });
-    }
-  );
+    /* ---------- Firestore: Günlük ---------- */
+    const fs = getFirestore(app);
+    const diaryText    = document.getElementById("diaryText");
+    const saveDiaryBtn = document.getElementById("saveDiaryBtn");
+    const diaryList    = document.getElementById("diaryList");
 
-  // --- SAYAÇ Realtime Database (YENİ) ---
-  const rtdb = getDatabase(app);
-
-  // EKRAN/SES elemanları
-  const countdownEl = document.getElementById("countdown");
-  const plusBtn     = document.getElementById("plusBtn");
-  const minusBtn    = document.getElementById("minusBtn");
-  const bgMusic     = document.getElementById("bgMusic");
-  const plusSound   = document.getElementById("plusSound");
-  const minusSound  = document.getElementById("minusSound");
-
-  // Realtime path: ekran görüntünde root’ta "targetdate" var.
-  // İstersen burada "counter/main" yapıp altına yazabilirdik; senin DB’ye uydurdum:
-  const COUNTER_PATH = "targetdate";   // örn:  "2026-05-21T00:00:00.000Z"
-
-  let endDate = null;
-
-  function updateCountdown(){
-    if (!endDate) return;
-    const diff = endDate - new Date();
-    const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
-    countdownEl.textContent = `${days} Gün kaldı`;
-  }
-
-  async function loadCounter(){
-    try{
-      const snap = await get(ref(rtdb, COUNTER_PATH));
-      if (snap.exists()){
-        const iso = snap.val();              // ISO string bekliyoruz
-        endDate   = new Date(iso);
-      } else {
-        endDate   = new Date();
-        endDate.setDate(endDate.getDate() + 40);
-        await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
+    saveDiaryBtn.addEventListener("click", async () => {
+      const text = (diaryText.value || "").trim();
+      if (!text) return;
+      try{
+        await addDoc(collection(fs, "diary"), { text, createdAt: serverTimestamp() });
+        diaryText.value = "";
+      }catch(e){
+        showWarn("Günlük kaydedilemedi (Firestore).");
+        console.error(e);
       }
+    });
+
+    onSnapshot(
+      query(collection(fs, "diary"), orderBy("createdAt","desc"), limit(100)),
+      (snap)=>{
+        diaryList.innerHTML = "";
+        snap.forEach(d=>{
+          const x = d.data();
+          const t = x.createdAt?.toDate ? x.createdAt.toDate() : null;
+          const when = t ? t.toLocaleString("tr-TR") : "(tarih yok)";
+          const item = document.createElement("div");
+          item.className = "diary-item";
+          item.innerHTML = `<span class="diary-meta">🕒 ${when}</span><div>${x.text||""}</div>`;
+          diaryList.appendChild(item);
+        });
+      },
+      (err)=>{ console.error(err); showWarn("Günlük listelenemedi."); }
+    );
+
+    /* ---------- Realtime DB: Sayaç ---------- */
+    const rtdb = getDatabase(app);
+
+    const countdownEl = document.getElementById("countdown");
+    const plusBtn     = document.getElementById("plusBtn");
+    const minusBtn    = document.getElementById("minusBtn");
+    const bgMusic     = document.getElementById("bgMusic");
+    const plusSound   = document.getElementById("plusSound");
+    const minusSound  = document.getElementById("minusSound");
+
+    // RTDB anahtarın: ekran görüntündeki gibi root'ta 'targetdate'
+    const COUNTER_PATH = "targetdate"; // örn: "2026-05-21T00:00:00.000Z"
+    let endDate = null;
+
+    function updateCountdown(){
+      if (!endDate) return;
+      const diff = endDate - new Date();
+      const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+      countdownEl.textContent = `${days} Gün kaldı`;
+    }
+
+    async function loadCounter(){
+      try{
+        const snap = await get(ref(rtdb, COUNTER_PATH));
+        if (snap.exists()){
+          const iso = snap.val();
+          endDate = new Date(iso);
+          if (isNaN(endDate)) throw new Error("Geçersiz tarih: " + iso);
+        } else {
+          endDate = new Date(); endDate.setDate(endDate.getDate() + 40);
+          await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
+        }
+        updateCountdown();
+      }catch(e){
+        console.error("RTDB get hata:", e);
+        endDate = new Date(); endDate.setDate(endDate.getDate() + 40); // yerel fallback
+        showWarn("Realtime DB okunamadı; sayaç yerel çalışıyor.");
+        updateCountdown();
+      }
+    }
+
+    // Canlı dinleme (başka yerden değişirse düşsün)
+    onValue(ref(rtdb, COUNTER_PATH), (snap)=>{
+      if (snap.exists()){
+        const iso = snap.val();
+        const d   = new Date(iso);
+        if (!isNaN(d)) { endDate = d; updateCountdown(); }
+      }
+    });
+
+    // Efekt → müzik akışı
+    async function playEffectThenResume(soundEl){
+      const wasPlaying = !bgMusic.paused;
+      try { bgMusic.pause(); } catch {}
+      try {
+        soundEl.pause(); soundEl.currentTime = 0;
+        await soundEl.play();               // play() promise
+      } catch (e) { console.warn("Efekt çalınamadı:", e); }
+      soundEl.onended = () => { if (wasPlaying) { try{ bgMusic.play(); }catch{} } };
+    }
+
+    // +7 / -2
+    plusBtn.addEventListener("click", async ()=>{
+      if(!endDate) return;
+      playEffectThenResume(plusSound);
+      endDate.setDate(endDate.getDate() + 7);
+      try{
+        await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
+      }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi (RTDB)."); }
       updateCountdown();
-    }catch(e){
-      console.error("RTDB get hata:", e);
-      // fallback: yerel sayaç
-      endDate = new Date();
-      endDate.setDate(endDate.getDate() + 40);
+    });
+
+    minusBtn.addEventListener("click", async ()=>{
+      if(!endDate) return;
+      playEffectThenResume(minusSound);
+      endDate.setDate(endDate.getDate() - 2);
+      try{
+        await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
+      }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi (RTDB)."); }
       updateCountdown();
+    });
+
+    // Ekran akışı
+    setInterval(updateCountdown, 1000);
+
+    // Autoplay engeli: ilk etkileşimde sesleri “prime” et
+    window.addEventListener("pointerdown", async function primeOnce(){
+      window.removeEventListener("pointerdown", primeOnce);
+      const audios = [bgMusic, plusSound, minusSound];
+      for (const a of audios){
+        try{ await a.play(); a.pause(); a.currentTime = 0; }catch{}
+      }
+      if (bgMusic.paused){ try{ bgMusic.play(); }catch{} }
+    }, { once:true });
+
+    // Başlangıç
+    loadCounter();
+
+    // Uyarı helper
+    function showWarn(msg){
+      const el = document.getElementById("warnBanner");
+      el.textContent = msg;
+      el.style.display = "block";
+      setTimeout(()=> el.style.display="none", 4000);
     }
-  }
+  </script>
 
-  // Canlı dinleme: DB’de değişince ekrana düşsün
-  onValue(ref(rtdb, COUNTER_PATH), (snap)=>{
-    if (snap.exists()){
-      const iso = snap.val();
-      const d   = new Date(iso);
-      if (!isNaN(d)) { endDate = d; updateCountdown(); }
-    }
-  });
-
-  // Efekt → müzik akışı
-  async function playEffectThenResume(soundEl){
-    const wasPlaying = !bgMusic.paused;
-    try { bgMusic.pause(); } catch {}
-    try {
-      soundEl.pause(); soundEl.currentTime = 0;
-      await soundEl.play();
-    } catch {}
-    soundEl.onended = () => { if (wasPlaying){ try{ bgMusic.play(); }catch{} } };
-  }
-
-  // +7 / -2 gün yaz ve DB’ye kaydet
-  plusBtn.addEventListener("click", async ()=>{
-    if(!endDate) return;
-    playEffectThenResume(plusSound);
-    endDate.setDate(endDate.getDate() + 7);
-    await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
-    updateCountdown();
-  });
-
-  minusBtn.addEventListener("click", async ()=>{
-    if(!endDate) return;
-    playEffectThenResume(minusSound);
-    endDate.setDate(endDate.getDate() - 2);
-    await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
-    updateCountdown();
-  });
-
-  // Ekran akışı
-  setInterval(updateCountdown, 1000);
-
-  // Autoplay engeline takılırsa: ilk etkileşimde sesleri “prime” et
-  window.addEventListener("pointerdown", async function primeOnce(){
-    window.removeEventListener("pointerdown", primeOnce);
-    const audios = [bgMusic, plusSound, minusSound];
-    for (const a of audios){
-      try{ await a.play(); a.pause(); a.currentTime = 0; }catch{}
-    }
-  }, { once:true });
-
-  // Başlangıçta yükle
-  loadCounter();
-</script>
+  <!-- ====== MENÜ (MODULE DEĞİL — global) ====== -->
+  <script>
+    (function(){
+      const menuBtn  = document.getElementById("menuBtn");
+      const sideMenu = document.getElementById("sideMenu");
+      menuBtn.addEventListener("click", ()=> sideMenu.classList.toggle("open"));
+      sideMenu.querySelectorAll("a").forEach(a=>{
+        a.addEventListener("click", (e)=>{
+          e.preventDefault();
+          const id = a.getAttribute("data-target");
+          document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+          document.getElementById(id).classList.add("active");
+          sideMenu.classList.remove("open");
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
-
