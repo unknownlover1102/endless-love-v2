@@ -28,7 +28,6 @@
     h1 {
       color: #d63384;
     }
-    /* Menü butonu */
     .menu-btn {
       position: absolute;
       top: 15px;
@@ -37,7 +36,6 @@
       cursor: pointer;
       z-index: 1000;
     }
-    /* Yan menü */
     .side-menu {
       position: fixed;
       left: -220px;
@@ -50,9 +48,7 @@
       transition: 0.4s;
       box-shadow: 2px 0 5px rgba(0,0,0,0.3);
     }
-    .side-menu.open {
-      left: 0;
-    }
+    .side-menu.open { left: 0; }
     .side-menu a {
       display: block;
       padding: 15px;
@@ -60,16 +56,9 @@
       color: white;
       transition: background 0.3s;
     }
-    .side-menu a:hover {
-      background: #a02362;
-    }
-    /* İçerikler */
-    .section {
-      display: none;
-    }
-    .section.active {
-      display: block;
-    }
+    .side-menu a:hover { background: #a02362; }
+    .section { display: none; }
+    .section.active { display: block; }
     textarea {
       width: 100%;
       min-height: 120px;
@@ -91,9 +80,7 @@
       color: white;
       transition: 0.3s;
     }
-    button:hover {
-      background: #a02362;
-    }
+    button:hover { background: #a02362; }
     img {
       max-width: 100%;
       border-radius: 15px;
@@ -124,7 +111,8 @@
     <div id="diary" class="section">
       <h2>Günlük</h2>
       <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
-      <textarea placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
+      <textarea id="diaryText" placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
+      <button id="saveDiaryBtn">Gönder</button>
     </div>
 
     <!-- Görsel Tahmin -->
@@ -150,9 +138,8 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-    // 🔥 Senin config'in
     const firebaseConfig = {
       apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
       authDomain: "endless-love-f201c.firebaseapp.com",
@@ -170,6 +157,9 @@
     const minusBtn = document.getElementById("minusBtn");
     const plusSound = document.getElementById("plusSound");
     const minusSound = document.getElementById("minusSound");
+    const bgMusic = document.getElementById("bgMusic");
+    const saveDiaryBtn = document.getElementById("saveDiaryBtn");
+    const diaryText = document.getElementById("diaryText");
 
     let endDate;
 
@@ -179,7 +169,6 @@
       if (snap.exists()) {
         endDate = snap.data().endDate.toDate();
       } else {
-        // default: 40 gün sonrası
         endDate = new Date();
         endDate.setDate(endDate.getDate() + 40);
         await setDoc(ref, { endDate });
@@ -199,16 +188,11 @@
       countdownEl.innerText = `${days} Gün kaldı`;
     }
 
-    // 🔔 Buton eventleri müzikle entegre edildi
     plusBtn.addEventListener("click", async () => {
-      const music = document.getElementById("bgMusic");
-      const wasPlaying = !music.paused;
-      music.pause();
-
+      const wasPlaying = !bgMusic.paused;
+      bgMusic.pause();
       plusSound.play();
-      plusSound.onended = async () => {
-        if (wasPlaying) music.play();
-      };
+      plusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
 
       endDate.setDate(endDate.getDate() + 7);
       await saveCounter();
@@ -216,25 +200,40 @@
     });
 
     minusBtn.addEventListener("click", async () => {
-      const music = document.getElementById("bgMusic");
-      const wasPlaying = !music.paused;
-      music.pause();
-
+      const wasPlaying = !bgMusic.paused;
+      bgMusic.pause();
       minusSound.play();
-      minusSound.onended = async () => {
-        if (wasPlaying) music.play();
-      };
+      minusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
 
       endDate.setDate(endDate.getDate() - 2);
       await saveCounter();
       updateCountdown();
     });
 
+    // Günlük kaydet
+    saveDiaryBtn.addEventListener("click", async () => {
+      const text = diaryText.value.trim();
+      if (text) {
+        await addDoc(collection(db, "diary"), {
+          text,
+          createdAt: serverTimestamp()
+        });
+        diaryText.value = "";
+        alert("Günlük kaydedildi!");
+      }
+    });
+
     loadCounter();
     setInterval(updateCountdown, 60000);
+
+    // 🔊 İlk tıklamada müzik garantili başlasın
+    document.body.addEventListener("click", () => {
+      if (bgMusic.paused) {
+        bgMusic.play();
+      }
+    }, { once: true });
   </script>
 
-  <!-- Menü script -->
   <script>
     function toggleMenu() {
       document.getElementById("sideMenu").classList.toggle("open");
