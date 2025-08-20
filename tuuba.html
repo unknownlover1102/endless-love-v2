@@ -12,7 +12,7 @@
       display:flex; justify-content:center; align-items:center; min-height:100vh; overflow:hidden;
     }
     .container{
-      width:clamp(320px, 90vw, 860px); background:#fff; border-radius:20px; padding:20px;
+      width:clamp(320px, 90vw, 960px); background:#fff; border-radius:20px; padding:20px;
       box-shadow:0 0 15px rgba(0,0,0,.2); text-align:center; position:relative;
     }
     h1{ color:var(--pink); margin:8px 0 18px }
@@ -45,19 +45,37 @@
 
     #countdown{ font-size:2rem; margin:18px 0 6px; letter-spacing:.25px }
 
-    .diary-list{
-      margin-top:14px; text-align:left; max-height:260px; overflow:auto; border:1px solid #eee; border-radius:12px; padding:10px 12px; background:#fff8fb;
+    /* Günlük üst bar */
+    .author-toggle{
+      display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0;
     }
-    .diary-item{ border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4 }
-    .diary-item:last-child{ border-bottom:none }
-    .diary-meta{ font-size:12px; color:#8a8a8a; margin-bottom:4px; display:block }
+    .author-btn{
+      padding:8px 14px; border-radius:999px; border:2px solid var(--pink); background:#fff; color:var(--pink); font-weight:700;
+    }
+    .author-btn.active{ background:var(--pink); color:#fff; }
+
+    /* İki sütun günlük listesi */
+    .diary-columns{
+      display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; text-align:left;
+    }
+    .diary-card{
+      border:1px solid #eee; border-radius:12px; background:#fff8fb; padding:10px 12px; max-height:300px; overflow:auto;
+    }
+    .diary-card h3{ margin:0 0 8px 0; color:var(--pink) }
+    .entry{ border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4 }
+    .entry:last-child{ border-bottom:none }
+    .meta{ font-size:12px; color:#8a8a8a; margin-bottom:4px; display:block }
 
     #warnBanner{
       position:fixed; bottom:8px; left:8px; background:#fff3cd; color:#664d03; border:1px solid #ffe69c;
       border-radius:8px; padding:8px 10px; font-size:12px; z-index:9999; display:none;
     }
 
-    @media (max-width:480px){ #countdown{ font-size:1.6rem } button{ width:100%; max-width:260px } }
+    @media (max-width:720px){
+      .diary-columns{ grid-template-columns:1fr; }
+      #countdown{ font-size:1.6rem }
+      button{ width:100%; max-width:260px }
+    }
   </style>
 </head>
 <body>
@@ -91,9 +109,28 @@
     <section id="diary" class="section" aria-label="Günlük">
       <h2>Günlük</h2>
       <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
+
+      <!-- Yazar seçimi -->
+      <div class="author-toggle">
+        <button class="author-btn active" id="btnTugba" data-author="tugba">Tuğba olarak yaz</button>
+        <button class="author-btn" id="btnKaan" data-author="kaan">Kaan olarak yaz</button>
+      </div>
+
+      <!-- Ortak metin girişi -->
       <textarea id="diaryText" placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
       <button id="saveDiaryBtn">Gönder</button>
-      <div id="diaryList" class="diary-list"></div>
+
+      <!-- İki sütun liste -->
+      <div class="diary-columns">
+        <div class="diary-card">
+          <h3>📁 Tuğba Dosyası</h3>
+          <div id="listTugba"></div>
+        </div>
+        <div class="diary-card">
+          <h3>📁 Kaan Dosyası</h3>
+          <div id="listKaan"></div>
+        </div>
+      </div>
     </section>
 
     <!-- Görsel Tahmin -->
@@ -142,17 +179,42 @@
 
     const app   = initializeApp(firebaseConfig);
 
-    /* ---------- Firestore: Günlük ---------- */
+    /* ---------- Firestore: Günlük (iki yazar) ---------- */
     const fs = getFirestore(app);
+
+    // Yazar seçimi
+    let currentAuthor = "tugba";
+    const btnTugba = document.getElementById("btnTugba");
+    const btnKaan  = document.getElementById("btnKaan");
+
+    function setAuthor(author){
+      currentAuthor = author;
+      if (author === "tugba"){
+        btnTugba.classList.add("active");
+        btnKaan.classList.remove("active");
+      } else {
+        btnKaan.classList.add("active");
+        btnTugba.classList.remove("active");
+      }
+    }
+    btnTugba.addEventListener("click", ()=> setAuthor("tugba"));
+    btnKaan .addEventListener("click", ()=> setAuthor("kaan"));
+
     const diaryText    = document.getElementById("diaryText");
     const saveDiaryBtn = document.getElementById("saveDiaryBtn");
-    const diaryList    = document.getElementById("diaryList");
+    const listTugba    = document.getElementById("listTugba");
+    const listKaan     = document.getElementById("listKaan");
 
+    // Kayıt
     saveDiaryBtn.addEventListener("click", async () => {
       const text = (diaryText.value || "").trim();
       if (!text) return;
       try{
-        await addDoc(collection(fs, "diary"), { text, createdAt: serverTimestamp() });
+        await addDoc(collection(fs, "diary"), {
+          text,
+          author: currentAuthor,            // "tugba" | "kaan"
+          createdAt: serverTimestamp()
+        });
         diaryText.value = "";
       }catch(e){
         showWarn("Günlük kaydedilemedi (Firestore).");
@@ -160,18 +222,21 @@
       }
     });
 
+    // Listeleme (canlı) → iki sütun olarak ayır
     onSnapshot(
-      query(collection(fs, "diary"), orderBy("createdAt","desc"), limit(100)),
+      query(collection(fs, "diary"), orderBy("createdAt","desc"), limit(200)),
       (snap)=>{
-        diaryList.innerHTML = "";
+        listTugba.innerHTML = "";
+        listKaan.innerHTML  = "";
         snap.forEach(d=>{
           const x = d.data();
           const t = x.createdAt?.toDate ? x.createdAt.toDate() : null;
           const when = t ? t.toLocaleString("tr-TR") : "(tarih yok)";
           const item = document.createElement("div");
-          item.className = "diary-item";
-          item.innerHTML = `<span class="diary-meta">🕒 ${when}</span><div>${x.text||""}</div>`;
-          diaryList.appendChild(item);
+          item.className = "entry";
+          item.innerHTML = `<span class="meta">🕒 ${when}</span><div>${x.text || ""}</div>`;
+          if (x.author === "kaan") listKaan.appendChild(item);
+          else                     listTugba.appendChild(item);
         });
       },
       (err)=>{ console.error(err); showWarn("Günlük listelenemedi."); }
@@ -187,7 +252,7 @@
     const plusSound   = document.getElementById("plusSound");
     const minusSound  = document.getElementById("minusSound");
 
-    // RTDB anahtarın: ekran görüntündeki gibi root'ta 'targetdate'
+    // RTDB anahtarın: root'ta 'targetdate'
     const COUNTER_PATH = "targetdate"; // örn: "2026-05-21T00:00:00.000Z"
     let endDate = null;
 
@@ -218,7 +283,6 @@
       }
     }
 
-    // Canlı dinleme (başka yerden değişirse düşsün)
     onValue(ref(rtdb, COUNTER_PATH), (snap)=>{
       if (snap.exists()){
         const iso = snap.val();
@@ -233,12 +297,11 @@
       try { bgMusic.pause(); } catch {}
       try {
         soundEl.pause(); soundEl.currentTime = 0;
-        await soundEl.play();               // play() promise
+        await soundEl.play();
       } catch (e) { console.warn("Efekt çalınamadı:", e); }
       soundEl.onended = () => { if (wasPlaying) { try{ bgMusic.play(); }catch{} } };
     }
 
-    // +7 / -2
     plusBtn.addEventListener("click", async ()=>{
       if(!endDate) return;
       playEffectThenResume(plusSound);
@@ -259,7 +322,6 @@
       updateCountdown();
     });
 
-    // Ekran akışı
     setInterval(updateCountdown, 1000);
 
     // Autoplay engeli: ilk etkileşimde sesleri “prime” et
