@@ -28,6 +28,7 @@
     h1 {
       color: #d63384;
     }
+    /* Menü butonu */
     .menu-btn {
       position: absolute;
       top: 15px;
@@ -36,6 +37,7 @@
       cursor: pointer;
       z-index: 1000;
     }
+    /* Yan menü */
     .side-menu {
       position: fixed;
       left: -220px;
@@ -48,7 +50,9 @@
       transition: 0.4s;
       box-shadow: 2px 0 5px rgba(0,0,0,0.3);
     }
-    .side-menu.open { left: 0; }
+    .side-menu.open {
+      left: 0;
+    }
     .side-menu a {
       display: block;
       padding: 15px;
@@ -56,9 +60,16 @@
       color: white;
       transition: background 0.3s;
     }
-    .side-menu a:hover { background: #a02362; }
-    .section { display: none; }
-    .section.active { display: block; }
+    .side-menu a:hover {
+      background: #a02362;
+    }
+    /* İçerikler */
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
     textarea {
       width: 100%;
       min-height: 120px;
@@ -80,11 +91,40 @@
       color: white;
       transition: 0.3s;
     }
-    button:hover { background: #a02362; }
+    button:hover {
+      background: #a02362;
+    }
     img {
       max-width: 100%;
       border-radius: 15px;
       margin-top: 15px;
+    }
+
+    /* Günlük listesi stili */
+    .diary-list {
+      margin-top: 16px;
+      text-align: left;
+      max-height: 260px;
+      overflow: auto;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fff8fb;
+    }
+    .diary-item {
+      border-bottom: 1px dashed #e6b7cd;
+      padding: 8px 0;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+    .diary-item:last-child {
+      border-bottom: none;
+    }
+    .diary-meta {
+      font-size: 12px;
+      color: #8a8a8a;
+      margin-bottom: 4px;
+      display: block;
     }
   </style>
 </head>
@@ -113,6 +153,11 @@
       <p><i>“Günümüzü birbirimize anlatalım, tamam ayrıyız bana değil buraya anlat ben bakmam.”</i></p>
       <textarea id="diaryText" placeholder="Bugün nasıldı? Buraya yaz..."></textarea>
       <button id="saveDiaryBtn">Gönder</button>
+
+      <!-- Yeni: Günlük liste alanı -->
+      <div id="diaryList" class="diary-list">
+        <!-- Firestore’dan canlı doldurulacak -->
+      </div>
     </div>
 
     <!-- Görsel Tahmin -->
@@ -125,6 +170,7 @@
 
     <!-- Müzik -->
     <div style="margin-top:20px;">
+      <!-- AUTOPLAY + LOOP + fallback source satırı -->
       <audio id="bgMusic" loop autoplay>
         <source src="ask-sarkisi.mp3" type="audio/mpeg">
       </audio>
@@ -138,8 +184,14 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc, getDoc, setDoc,
+      addDoc, collection, serverTimestamp,
+      query, orderBy, onSnapshot, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
+    // 🔥 Senin config'in
     const firebaseConfig = {
       apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
       authDomain: "endless-love-f201c.firebaseapp.com",
@@ -150,25 +202,31 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db  = getFirestore(app);
 
+    // --- Sayaç ---
     const countdownEl = document.getElementById("countdown");
-    const plusBtn = document.getElementById("plusBtn");
-    const minusBtn = document.getElementById("minusBtn");
-    const plusSound = document.getElementById("plusSound");
-    const minusSound = document.getElementById("minusSound");
-    const bgMusic = document.getElementById("bgMusic");
-    const saveDiaryBtn = document.getElementById("saveDiaryBtn");
-    const diaryText = document.getElementById("diaryText");
+    const plusBtn     = document.getElementById("plusBtn");
+    const minusBtn    = document.getElementById("minusBtn");
+    const plusSound   = document.getElementById("plusSound");
+    const minusSound  = document.getElementById("minusSound");
+    const bgMusic     = document.getElementById("bgMusic");
 
     let endDate;
 
     async function loadCounter() {
-      const ref = doc(db, "counter", "main");
+      const ref  = doc(db, "counter", "main");
       const snap = await getDoc(ref);
       if (snap.exists()) {
-        endDate = snap.data().endDate.toDate();
+        // Firestore Timestamp mı ISO mu? İkisini de destekle:
+        const data = snap.data();
+        if (data.endDate?.toDate) {
+          endDate = data.endDate.toDate();
+        } else {
+          endDate = new Date(data.endDate || new Date());
+        }
       } else {
+        // default: 40 gün sonrası
         endDate = new Date();
         endDate.setDate(endDate.getDate() + 40);
         await setDoc(ref, { endDate });
@@ -182,15 +240,17 @@
     }
 
     function updateCountdown() {
-      const now = new Date();
+      const now  = new Date();
       const diff = endDate - now;
-      const days = Math.ceil(diff / (1000*60*60*24));
+      const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
       countdownEl.innerText = `${days} Gün kaldı`;
     }
 
+    // 🔔 Buton eventleri müzikle entegre edildi
     plusBtn.addEventListener("click", async () => {
       const wasPlaying = !bgMusic.paused;
       bgMusic.pause();
+      plusSound.currentTime = 0;
       plusSound.play();
       plusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
 
@@ -202,6 +262,7 @@
     minusBtn.addEventListener("click", async () => {
       const wasPlaying = !bgMusic.paused;
       bgMusic.pause();
+      minusSound.currentTime = 0;
       minusSound.play();
       minusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
 
@@ -210,30 +271,64 @@
       updateCountdown();
     });
 
-    // Günlük kaydet
+    // Autoplay fallback: ilk tıklamada garanti başlat
+    document.body.addEventListener("click", () => {
+      if (bgMusic.paused) bgMusic.play();
+    }, { once: true });
+
+    // --- Günlük: Kaydet + Listele (canlı) ---
+    const diaryText   = document.getElementById("diaryText");
+    const saveDiaryBtn= document.getElementById("saveDiaryBtn");
+    const diaryList   = document.getElementById("diaryList");
+
     saveDiaryBtn.addEventListener("click", async () => {
       const text = diaryText.value.trim();
-      if (text) {
-        await addDoc(collection(db, "diary"), {
-          text,
-          createdAt: serverTimestamp()
-        });
-        diaryText.value = "";
-        alert("Günlük kaydedildi!");
-      }
+      if (!text) return;
+      await addDoc(collection(db, "diary"), {
+        text,
+        createdAt: serverTimestamp()
+      });
+      diaryText.value = "";
+      // İstersen küçük bir bildirim de ekleyebiliriz
     });
 
-    loadCounter();
-    setInterval(updateCountdown, 60000);
+    // Son 100 kaydı tarihe göre (yeni → eski) canlı izle
+    const qDiary = query(
+      collection(db, "diary"),
+      orderBy("createdAt", "desc"),
+      limit(100)
+    );
 
-    // 🔊 İlk tıklamada müzik garantili başlasın
-    document.body.addEventListener("click", () => {
-      if (bgMusic.paused) {
-        bgMusic.play();
-      }
-    }, { once: true });
+    onSnapshot(qDiary, (snap) => {
+      diaryList.innerHTML = "";
+      snap.forEach((docSnap) => {
+        const d = docSnap.data();
+        const ts = d.createdAt?.toDate ? d.createdAt.toDate() : null;
+        const when = ts ? ts.toLocaleString("tr-TR") : "(tarih bekleniyor)";
+        const item = document.createElement("div");
+        item.className = "diary-item";
+
+        const meta = document.createElement("span");
+        meta.className = "diary-meta";
+        meta.textContent = `🕒 ${when}`;
+
+        const content = document.createElement("div");
+        content.textContent = d.text || "";
+
+        item.appendChild(meta);
+        item.appendChild(content);
+        diaryList.appendChild(item);
+      });
+    });
+
+    // Başlangıçta verileri yükle
+    loadCounter();
+    // Sayaç saniye saniye akmasın diye dakikada 1 kez güncelliyoruz;
+    // istersen 1000 ms yaparsın: setInterval(updateCountdown, 1000);
+    setInterval(updateCountdown, 60000);
   </script>
 
+  <!-- Menü script (dokunma) -->
   <script>
     function toggleMenu() {
       document.getElementById("sideMenu").classList.toggle("open");
