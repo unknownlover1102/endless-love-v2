@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Tuuba ❤️</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     :root{ --pink:#d63384; --pink-dark:#a02362; --bg:#ffe6f0; }
     *{ box-sizing:border-box }
     body{
-      margin:0; padding:0; font-family:Arial, sans-serif; background:var(--bg);
+      margin:0; padding:0; font-family:Arial,sans-serif; background:var(--bg);
       display:flex; justify-content:center; align-items:center; min-height:100vh; overflow:hidden;
     }
     .container{
@@ -45,22 +45,14 @@
 
     #countdown{ font-size:2rem; margin:18px 0 6px; letter-spacing:.25px }
 
-    /* Günlük üst bar */
-    .author-toggle{
-      display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0;
-    }
-    .author-btn{
-      padding:8px 14px; border-radius:999px; border:2px solid var(--pink); background:#fff; color:var(--pink); font-weight:700;
-    }
+    /* Yazar seçimi */
+    .author-toggle{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0; }
+    .author-btn{ padding:8px 14px; border-radius:999px; border:2px solid var(--pink); background:#fff; color:var(--pink); font-weight:700; }
     .author-btn.active{ background:var(--pink); color:#fff; }
 
-    /* İki sütun günlük listesi */
-    .diary-columns{
-      display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; text-align:left;
-    }
-    .diary-card{
-      border:1px solid #eee; border-radius:12px; background:#fff8fb; padding:10px 12px; max-height:300px; overflow:auto;
-    }
+    /* İki sütun günlük */
+    .diary-columns{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px; text-align:left; }
+    .diary-card{ border:1px solid #eee; border-radius:12px; background:#fff8fb; padding:10px 12px; max-height:300px; overflow:auto; }
     .diary-card h3{ margin:0 0 8px 0; color:var(--pink) }
     .entry{ border-bottom:1px dashed #e6b7cd; padding:8px 0; white-space:pre-wrap; line-height:1.4 }
     .entry:last-child{ border-bottom:none }
@@ -143,15 +135,15 @@
 
     <!-- Arka Plan Müziği -->
     <audio id="bgMusic" loop autoplay>
-      <source src="ask-sarkisi.mp3" type="audio/mpeg">
+      <source src="ask-sarkisi.mp3" type="audio/mpeg" />
     </audio>
   </div>
 
-  <!-- Efekt Sesleri (preload) -->
+  <!-- Efekt Sesleri -->
   <audio id="plusSound"  src="plus.mp3"  preload="auto"></audio>
   <audio id="minusSound" src="minus.mp3" preload="auto"></audio>
 
-  <!-- ====== MODULE: Firebase (RTDB + Firestore) ====== -->
+  <!-- ====== MODULE: Firebase (RTDB sayaç + Firestore günlük) ====== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 
@@ -177,16 +169,23 @@
       databaseURL: "https://endless-love-v2-default-rtdb.europe-west1.firebasedatabase.app"
     };
 
-    const app   = initializeApp(firebaseConfig);
+    const app = initializeApp(firebaseConfig);
 
-    /* ---------- Firestore: Günlük (iki yazar) ---------- */
+    /* ---------- Uyarı helper ---------- */
+    const warnBanner = document.getElementById("warnBanner");
+    function showWarn(msg){
+      warnBanner.textContent = msg;
+      warnBanner.style.display = "block";
+      setTimeout(()=> warnBanner.style.display="none", 3000);
+    }
+
+    /* ---------- Firestore: Günlük (tek koleksiyon /diary) ---------- */
     const fs = getFirestore(app);
 
     // Yazar seçimi
     let currentAuthor = "tugba";
     const btnTugba = document.getElementById("btnTugba");
     const btnKaan  = document.getElementById("btnKaan");
-
     function setAuthor(author){
       currentAuthor = author;
       if (author === "tugba"){
@@ -205,46 +204,46 @@
     const listTugba    = document.getElementById("listTugba");
     const listKaan     = document.getElementById("listKaan");
 
-    // Kayıt
+    // Kaydet → /diary (author, text, createdAt)
     saveDiaryBtn.addEventListener("click", async () => {
       const text = (diaryText.value || "").trim();
       if (!text) return;
       try{
         await addDoc(collection(fs, "diary"), {
+          author: currentAuthor,  // "tugba" | "kaan"
           text,
-          author: currentAuthor,            // "tugba" | "kaan"
           createdAt: serverTimestamp()
         });
         diaryText.value = "";
       }catch(e){
-        showWarn("Günlük kaydedilemedi (Firestore).");
         console.error(e);
+        showWarn("Günlük kaydedilemedi (Firestore).");
       }
     });
 
-    // Listeleme (canlı) → iki sütun olarak ayır
+    // Listele (canlı): /diary → createdAt desc, sonra yazara göre iki sütuna ayır
     onSnapshot(
       query(collection(fs, "diary"), orderBy("createdAt","desc"), limit(200)),
       (snap)=>{
         listTugba.innerHTML = "";
         listKaan.innerHTML  = "";
-        snap.forEach(d=>{
-          const x = d.data();
+        snap.forEach(docSnap=>{
+          const x = docSnap.data();
           const t = x.createdAt?.toDate ? x.createdAt.toDate() : null;
           const when = t ? t.toLocaleString("tr-TR") : "(tarih yok)";
-          const item = document.createElement("div");
-          item.className = "entry";
-          item.innerHTML = `<span class="meta">🕒 ${when}</span><div>${x.text || ""}</div>`;
-          if (x.author === "kaan") listKaan.appendChild(item);
-          else                     listTugba.appendChild(item);
+          const div = document.createElement("div");
+          div.className = "entry";
+          div.innerHTML = `<span class="meta">🕒 ${when}</span><div>${x.text || ""}</div>`;
+          if ((x.author||"").toLowerCase() === "kaan") listKaan.appendChild(div);
+          else                                         listTugba.appendChild(div);
         });
       },
       (err)=>{ console.error(err); showWarn("Günlük listelenemedi."); }
     );
 
-    /* ---------- Realtime DB: Sayaç ---------- */
-    const rtdb = getDatabase(app);
-
+    /* ---------- Realtime DB: Sayaç (AYNEN) ---------- */
+    const db      = getDatabase(app);
+    const COUNTER_PATH = "targetdate"; // ISO string
     const countdownEl = document.getElementById("countdown");
     const plusBtn     = document.getElementById("plusBtn");
     const minusBtn    = document.getElementById("minusBtn");
@@ -252,8 +251,6 @@
     const plusSound   = document.getElementById("plusSound");
     const minusSound  = document.getElementById("minusSound");
 
-    // RTDB anahtarın: root'ta 'targetdate'
-    const COUNTER_PATH = "targetdate"; // örn: "2026-05-21T00:00:00.000Z"
     let endDate = null;
 
     function updateCountdown(){
@@ -265,40 +262,35 @@
 
     async function loadCounter(){
       try{
-        const snap = await get(ref(rtdb, COUNTER_PATH));
+        const snap = await get(ref(db, COUNTER_PATH));
         if (snap.exists()){
           const iso = snap.val();
           endDate = new Date(iso);
           if (isNaN(endDate)) throw new Error("Geçersiz tarih: " + iso);
         } else {
           endDate = new Date(); endDate.setDate(endDate.getDate() + 40);
-          await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
+          await set(ref(db, COUNTER_PATH), endDate.toISOString());
         }
         updateCountdown();
       }catch(e){
-        console.error("RTDB get hata:", e);
-        endDate = new Date(); endDate.setDate(endDate.getDate() + 40); // yerel fallback
-        showWarn("Realtime DB okunamadı; sayaç yerel çalışıyor.");
+        console.error(e);
+        endDate = new Date(); endDate.setDate(endDate.getDate() + 40);
+        showWarn("RTDB okunamadı; sayaç yerel çalışıyor.");
         updateCountdown();
       }
     }
 
-    onValue(ref(rtdb, COUNTER_PATH), (snap)=>{
+    onValue(ref(db, COUNTER_PATH), (snap)=>{
       if (snap.exists()){
-        const iso = snap.val();
-        const d   = new Date(iso);
+        const d = new Date(snap.val());
         if (!isNaN(d)) { endDate = d; updateCountdown(); }
       }
     });
 
-    // Efekt → müzik akışı
     async function playEffectThenResume(soundEl){
       const wasPlaying = !bgMusic.paused;
       try { bgMusic.pause(); } catch {}
-      try {
-        soundEl.pause(); soundEl.currentTime = 0;
-        await soundEl.play();
-      } catch (e) { console.warn("Efekt çalınamadı:", e); }
+      try { soundEl.pause(); soundEl.currentTime = 0; await soundEl.play(); } catch (e) { console.warn(e); }
       soundEl.onended = () => { if (wasPlaying) { try{ bgMusic.play(); }catch{} } };
     }
 
@@ -306,9 +298,7 @@
       if(!endDate) return;
       playEffectThenResume(plusSound);
       endDate.setDate(endDate.getDate() + 7);
-      try{
-        await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
-      }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi (RTDB)."); }
+      try{ await set(ref(db, COUNTER_PATH), endDate.toISOString()); }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi."); }
       updateCountdown();
     });
 
@@ -316,9 +306,7 @@
       if(!endDate) return;
       playEffectThenResume(minusSound);
       endDate.setDate(endDate.getDate() - 2);
-      try{
-        await set(ref(rtdb, COUNTER_PATH), endDate.toISOString());
-      }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi (RTDB)."); }
+      try{ await set(ref(db, COUNTER_PATH), endDate.toISOString()); }catch(e){ console.error(e); showWarn("Sayaç kaydedilemedi."); }
       updateCountdown();
     });
 
@@ -328,22 +316,13 @@
     window.addEventListener("pointerdown", async function primeOnce(){
       window.removeEventListener("pointerdown", primeOnce);
       const audios = [bgMusic, plusSound, minusSound];
-      for (const a of audios){
-        try{ await a.play(); a.pause(); a.currentTime = 0; }catch{}
-      }
+      for (const a of audios){ try{ await a.play(); a.pause(); a.currentTime = 0; }catch{} }
       if (bgMusic.paused){ try{ bgMusic.play(); }catch{} }
     }, { once:true });
 
-    // Başlangıç
+    // Başlat
+    setAuthor("tugba");
     loadCounter();
-
-    // Uyarı helper
-    function showWarn(msg){
-      const el = document.getElementById("warnBanner");
-      el.textContent = msg;
-      el.style.display = "block";
-      setTimeout(()=> el.style.display="none", 4000);
-    }
   </script>
 
   <!-- ====== MENÜ (MODULE DEĞİL — global) ====== -->
