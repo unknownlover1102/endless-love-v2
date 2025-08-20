@@ -183,161 +183,122 @@
 
   <!-- Firebase -->
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-    import {
-      getFirestore,
-      doc, getDoc, setDoc,
-      addDoc, collection, serverTimestamp,
-      query, orderBy, onSnapshot, limit
-    } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import {
+    getFirestore,
+    doc, getDoc, setDoc, onSnapshot, Timestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-    // 🔥 Senin config'in
-    const firebaseConfig = {
-      apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
-      authDomain: "endless-love-f201c.firebaseapp.com",
-      projectId: "endless-love-f201c",
-      storageBucket: "endless-love-f201c.firebasestorage.app",
-      messagingSenderId: "144384066384",
-      appId: "1:144384066384:web:b583d194fba60954fee255"
-    };
+  // Firebase config (seninkisi)
+  const firebaseConfig = {
+    apiKey: "AIzaSyD4RumRC4GnOlSTMONGJcAij9-_64LdBGs",
+    authDomain: "endless-love-f201c.firebaseapp.com",
+    projectId: "endless-love-f201c",
+    storageBucket: "endless-love-f201c.firebasestorage.app",
+    messagingSenderId: "144384066384",
+    appId: "1:144384066384:web:b583d194fba60954fee255"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db  = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
 
-    // --- Sayaç ---
-    const countdownEl = document.getElementById("countdown");
-    const plusBtn     = document.getElementById("plusBtn");
-    const minusBtn    = document.getElementById("minusBtn");
-    const plusSound   = document.getElementById("plusSound");
-    const minusSound  = document.getElementById("minusSound");
-    const bgMusic     = document.getElementById("bgMusic");
+  // Elemanlar
+  const countdownEl = document.getElementById("countdown");
+  const plusBtn     = document.getElementById("plusBtn");
+  const minusBtn    = document.getElementById("minusBtn");
+  const plusSound   = document.getElementById("plusSound");
+  const minusSound  = document.getElementById("minusSound");
+  const bgMusic     = document.getElementById("bgMusic");
 
-    let endDate;
+  // Sayaç doc yolu
+  const ref = doc(db, "counter", "main");
+  let endDate = null;
 
-    async function loadCounter() {
-      const ref  = doc(db, "counter", "main");
+  // Ekranı güncelle
+  function updateCountdown(){
+    if(!endDate) return;
+    const now  = new Date();
+    const diff = endDate - now;
+    const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
+    countdownEl.textContent = `${days} Gün kaldı`;
+  }
+
+  // Her zaman Timestamp yaz
+  async function writeEndDate(dateObj){
+    await setDoc(ref, { endDate: Timestamp.fromDate(dateObj) });
+  }
+
+  // İlk yükleme
+  (async function init(){
+    try{
       const snap = await getDoc(ref);
-      if (snap.exists()) {
-        // Firestore Timestamp mı ISO mu? İkisini de destekle:
-        const data = snap.data();
-        if (data.endDate?.toDate) {
-          endDate = data.endDate.toDate();
+      if (snap.exists()){
+        const d = snap.data();
+        if (d.endDate?.toDate){
+          endDate = d.endDate.toDate();          // Timestamp → Date
         } else {
-          endDate = new Date(data.endDate || new Date());
+          endDate = new Date(d.endDate || Date.now()); // Eski string ise
+          await writeEndDate(endDate);                 // Timestamp’e çevir
         }
       } else {
-        // default: 40 gün sonrası
         endDate = new Date();
-        endDate.setDate(endDate.getDate() + 40);
-        await setDoc(ref, { endDate });
+        endDate.setDate(endDate.getDate() + 40); // varsayılan
+        await writeEndDate(endDate);
       }
       updateCountdown();
-    }
-
-    async function saveCounter() {
-      const ref = doc(db, "counter", "main");
-      await setDoc(ref, { endDate });
-    }
-
-    function updateCountdown() {
-      const now  = new Date();
-      const diff = endDate - now;
-      const days = Math.max(0, Math.ceil(diff / (1000*60*60*24)));
-      countdownEl.innerText = `${days} Gün kaldı`;
-    }
-
-    // 🔔 Buton eventleri müzikle entegre edildi
-    plusBtn.addEventListener("click", async () => {
-      const wasPlaying = !bgMusic.paused;
-      bgMusic.pause();
-      plusSound.currentTime = 0;
-      plusSound.play();
-      plusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
-
-      endDate.setDate(endDate.getDate() + 7);
-      await saveCounter();
+    }catch(e){
+      // Firestore çalışmasa bile yerel fallback
+      endDate = new Date();
+      endDate.setDate(endDate.getDate() + 40);
       updateCountdown();
-    });
-
-    minusBtn.addEventListener("click", async () => {
-      const wasPlaying = !bgMusic.paused;
-      bgMusic.pause();
-      minusSound.currentTime = 0;
-      minusSound.play();
-      minusSound.onended = () => { if (wasPlaying) bgMusic.play(); };
-
-      endDate.setDate(endDate.getDate() - 2);
-      await saveCounter();
-      updateCountdown();
-    });
-
-    // Autoplay fallback: ilk tıklamada garanti başlat
-    document.body.addEventListener("click", () => {
-      if (bgMusic.paused) bgMusic.play();
-    }, { once: true });
-
-    // --- Günlük: Kaydet + Listele (canlı) ---
-    const diaryText   = document.getElementById("diaryText");
-    const saveDiaryBtn= document.getElementById("saveDiaryBtn");
-    const diaryList   = document.getElementById("diaryList");
-
-    saveDiaryBtn.addEventListener("click", async () => {
-      const text = diaryText.value.trim();
-      if (!text) return;
-      await addDoc(collection(db, "diary"), {
-        text,
-        createdAt: serverTimestamp()
-      });
-      diaryText.value = "";
-      // İstersen küçük bir bildirim de ekleyebiliriz
-    });
-
-    // Son 100 kaydı tarihe göre (yeni → eski) canlı izle
-    const qDiary = query(
-      collection(db, "diary"),
-      orderBy("createdAt", "desc"),
-      limit(100)
-    );
-
-    onSnapshot(qDiary, (snap) => {
-      diaryList.innerHTML = "";
-      snap.forEach((docSnap) => {
-        const d = docSnap.data();
-        const ts = d.createdAt?.toDate ? d.createdAt.toDate() : null;
-        const when = ts ? ts.toLocaleString("tr-TR") : "(tarih bekleniyor)";
-        const item = document.createElement("div");
-        item.className = "diary-item";
-
-        const meta = document.createElement("span");
-        meta.className = "diary-meta";
-        meta.textContent = `🕒 ${when}`;
-
-        const content = document.createElement("div");
-        content.textContent = d.text || "";
-
-        item.appendChild(meta);
-        item.appendChild(content);
-        diaryList.appendChild(item);
-      });
-    });
-
-    // Başlangıçta verileri yükle
-    loadCounter();
-    // Sayaç saniye saniye akmasın diye dakikada 1 kez güncelliyoruz;
-    // istersen 1000 ms yaparsın: setInterval(updateCountdown, 1000);
-    setInterval(updateCountdown, 60000);
-  </script>
-
-  <!-- Menü script (dokunma) -->
-  <script>
-    function toggleMenu() {
-      document.getElementById("sideMenu").classList.toggle("open");
     }
-    function showSection(id) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      toggleMenu();
+
+    // Gerçek zamanlı dinle
+    onSnapshot(ref, (ds)=>{
+      const d = ds.data();
+      if (d?.endDate?.toDate){
+        endDate = d.endDate.toDate();
+        updateCountdown();
+      }
+    });
+  })();
+
+  // Müzik + efekt
+  function playEffectThenResume(soundEl){
+    const wasPlaying = !bgMusic.paused;
+    try{ bgMusic.pause(); }catch{}
+    try{ soundEl.currentTime = 0; soundEl.play(); }catch{}
+    soundEl.onended = () => { if (wasPlaying){ try{ bgMusic.play(); }catch{} } };
+  }
+
+  // +7
+  plusBtn.addEventListener("click", async () => {
+    if(!endDate) return;
+    playEffectThenResume(plusSound);
+    endDate.setDate(endDate.getDate() + 7);
+    await writeEndDate(endDate);
+    updateCountdown();
+  });
+
+  // -2
+  minusBtn.addEventListener("click", async () => {
+    if(!endDate) return;
+    playEffectThenResume(minusSound);
+    endDate.setDate(endDate.getDate() - 2);
+    await writeEndDate(endDate);
+    updateCountdown();
+  });
+
+  // Her saniye ekranda sayı aksın
+  setInterval(updateCountdown, 1000);
+
+  // Autoplay engellenirse ilk tıklamada başlat
+  document.body.addEventListener("click", () => {
+    if (bgMusic && bgMusic.paused){
+      try{ bgMusic.play(); }catch{}
     }
-  </script>
+  }, { once: true });
+</script>
 </body>
 </html>
+
